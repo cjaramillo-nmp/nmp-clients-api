@@ -1,0 +1,4211 @@
+swagger: "2.0"
+info:
+  version: 1.0.1
+  title: "API Clientes v1"
+  description: API Gestión de Clientes
+  termsOfService: "https://www.royalresorts.com/terms"
+  contact:
+    name: Departamento de TI - Cristian Gerardo Jaramillo Cruz
+    email: xcjarac@montepiedad.com.mx
+  license:
+    name: MIT
+    url: https://github.com/apiaryio/polls-api/blob/master/LICENSE
+
+host: "nmp.com.mx"
+basePath: "/v1"
+
+schemes:
+  - https
+
+consumes:
+  - application/json
+
+produces:
+  - application/json
+
+securityDefinitions:
+  BasicAuth:
+    type: basic
+  ApiKeyAuth:
+    type: apiKey
+    in: header
+    name: X-API-Key
+  OAuth2:
+    type: oauth2
+    flow: accessCode
+    authorizationUrl: https://nmp.com.mx/oauth/authorize
+    tokenUrl: https://nmp.com.mx/oauth/token
+    scopes:
+      getExistsClientsByFilterV1: Grants read access
+      getPaginationOfREPEPV1: Grants read access
+      postCreatedREPEPV1: Grants write access
+      postCreatedREUSV1: Grants write access
+
+definitions:
+
+## Definicion de responses genericas
+  
+  GenericResponse:
+    type: object
+    properties:
+      code:
+        type: string
+        example: NMP-CRD-201
+      status:
+        type: string
+        example: SUCCESS
+      message:
+        type: string
+        example: Se ha realizado correctamente la operación
+  
+  BadRequest:
+    type: object
+    properties:
+      code:
+        type: string
+        example: NMP-CRD-400
+      message:
+        type: string
+        example: La solicitud no se encuentra bien formada
+  
+  Unauthorized:
+    type: object
+    properties:
+      code:
+        type: string
+        example: NMP-CRD-401
+      message:
+        type: string
+        example: Se ha producido un error de autorización
+  
+  Forbidden:
+    type: object
+    properties:
+      code:
+        type: string
+        example: NMP-CRD-403
+      message:
+        type: string
+        example: Se ha producido un error de autorización
+  
+  NotFound:
+    type: object
+    properties:
+      code:
+        type: string
+        example: NMP-CRD-404
+      message:
+        type: string
+        example: No se encontraron resultados
+  
+  InternalServerError:
+    type: object
+    properties:
+      code:
+        type: string
+        example: NMP-CRD-500
+      message:
+        type: string
+        example: Ocurrio un error interno en el servidor.
+
+## Definicion de requests y responses
+
+## Pagination Resources
+
+  Link:
+    type: object
+    properties:
+      key:
+        type: string
+      value: 
+        type: string
+
+  LinkArray:
+    type: array
+    items:
+      $ref: "#/definitions/Link"
+
+  Page:
+    type: object
+    description: Información de paginación
+    required: 
+      - number
+      - size
+      - totalPages
+      - totalElements
+    properties:
+      number:
+        type: integer
+        description: Número de página
+      size: 
+        type: integer
+        description: Número de elementos solicitados
+      totalPages:
+        type: integer
+        description: Número de páginas encontradas
+      totalElements:
+        type: integer
+        description: Total de coincidencias encontradas
+
+## Constantes
+  
+  SortDirection: &SORT_DIRECTION
+    type: string
+    description: >
+      Son los :
+        - ASC - Ordenamiento Ascendente
+        - DESC - Ordenamiento Descendente
+    enum:
+      - ASC
+      - DESC
+
+  UnidadOrganizacional: &UnidadOrganizacional
+    type: string
+    description: >
+      Unidad Organizacional:
+        - NMP - Nacional Monte de Piedad
+        - FMP - Financiera Monte de piedad
+    enum:
+      - NMP
+      - FMP
+  
+  VerifyType: &VERIFY_TYPE
+    type: string
+    title: Tipo de Verificación
+    description: >
+      Tipo de verificación:
+        - PHONE - Teléfono
+        - EMAIL - Correo electrónico
+    enum:
+      - PHONE
+      - EMAIL
+
+## Client
+
+  Client:
+    title: Cliente
+    type: object
+    required:
+      - id
+      - fechaCreacion
+      - fechaActualizacion
+    properties:
+      id: 
+        type: string
+        description: > 
+          Identificador único de cliente, asignado en el alta de registro
+          en MongoDB
+      uuid: 
+        type: string
+        description: > 
+          Identificador único de cliente en formator `UUID`
+      
+      fechaCreacion:
+        type: string
+        format: timestamp
+        description: Fecha de creación
+      fechaActualizacion:
+        type: string
+        format: timestamp
+        description: Fecha de última actualización
+
+  ClientDetail:
+    title: Detalle de Cliente
+    type: object
+    required:
+      - id
+      - fechaCreacion
+      - fechaActualizacion
+    properties:
+      id: 
+        type: string
+        description: > 
+          Identificador único de clientes asignado en Mongo DB
+      fechaCreacion:
+        type: string
+        format: timestamp
+        description: Fecha de creación
+      fechaActualizacion:
+        type: string
+        format: timestamp
+        description: Fecha de última actualización
+
+  ContentOfClient:
+    title: Colleción de Clientes
+    type: array
+    items:
+      $ref: "#/definitions/Client"
+
+  PaginationOfClient:
+    title: Paginación de Clientes
+    properties:
+      content:
+        $ref: "#/definitions/ContentOfClient"
+      page:
+        $ref: "#/definitions/Page"
+
+## Teléfono Cliente       
+  
+  Telefono:
+    title: Teléfono
+    type: object
+    required:
+      - id
+      - fechaCreacion
+      - fechaActualizacion
+    properties:
+      id: 
+        type: string
+        description: > 
+          Identificador único de clientes asignado en MongoDB
+      fechaCreacion:
+        type: string
+        format: timestamp
+        description: Fecha de creación
+      fechaActualizacion:
+        type: string
+        format: timestamp
+        description: Fecha de última actualización
+      
+## Validator
+
+  Origin:
+    title: Origen
+    type: object
+    required:
+      - unidadOrganizacional
+      - canal
+      - producto
+      - origenDato
+    properties:
+      unidadOrganizacional:
+        <<: *UnidadOrganizacional
+      canal:
+        type: string
+        description: Canal
+      producto:
+        type: string
+        description: Producto
+      origenDato:
+        type: string
+        description: Origen del Dato
+
+  VerifyOrigin:
+    type: object
+    required:
+      - unidadOrganizacional
+      - canal
+    properties:
+      unidadOrganizacional:
+        <<: *UnidadOrganizacional
+      canal:
+        type: string
+        description: Canal
+
+  Template:
+    title: Plantilla
+    type: object
+    required:
+      - id
+      - parametros
+    properties:
+      id:
+        type: string
+        description: > 
+          Identificador único de plantilla creada en el 
+          API de Comunicaiones
+      parametros:
+        $ref: "#/definitions/ArrayOfStringParam"
+
+  Message:
+    type: object
+    required:
+      - destinatario
+      - tipo
+      - plantilla
+    properties:
+      remitente:
+        type: string
+        description: >
+          Remitente del mensaje por ejemplo:
+            - no-reply@montepiedad.com.mx
+            - no-reply@financieramontedepiedad.com.mx
+            
+          > Solo aplica para mensajes de tipo `EMAIL`
+      asunto:
+        type: string
+        description: > 
+          Asunto del mensaje
+          
+          > Solo aplica para mensajes de tipo `EMAIL`
+      destinatario:
+        type: string
+        description: >
+          Medio de contacto a verificar, el cual puede ser:
+          - Correo electrónico
+          - Teléfono
+      tipo:
+        <<: *VERIFY_TYPE
+      plantilla:
+        $ref: "#/definitions/Template"
+  
+  Challenge:
+    title: Desafío
+      - generador
+      - numeroIntentos
+      - vigenciaIntento
+      - reenvioIntento
+      - reestablecimientoIntentos
+    required:
+      - generador
+      - numeroIntentos
+      - vigenciaIntento
+      - validacionIntento
+      - reenvioIntento
+      - reestablecimientoIntentos
+    properties:
+      generador:
+        type: string
+        description: > 
+          Expresión regular para la generación del desafío, 
+          ha enviar en esta plantilla
+      numeroIntentos:
+        description: > 
+          Número máximo de intentos para verificar un 
+          medio de contacto
+        type: number
+        format: int32
+        minimum: 1
+        maximum: 10
+      vigenciaIntento:
+        description: > 
+          Vigencia del desafio en segundos ejemplo:
+          
+            -    60 `1 minuto`
+            -  3600 `1 hora`
+            - 86400 `1 día`
+        type: number
+        format: int64
+      validacionIntento:
+        description: > 
+          Número de intentos para validar un desafío
+        type: number
+        format: int32
+      reenvioIntento:
+        description: >
+          Número de reenvios de un mismo desafio por medio de contacto
+        type: number
+        format: int32
+      reestablecimientoIntentos:
+        description: > 
+          Reestablecimiento de los intentos de un medio de contacto
+          desde la generación del primer desafio en segundos. Ejemplo:
+          
+            -    60 `1 minuto`
+            -  3600 `1 hora`
+            - 86400 `1 día`
+      
+  Verify:
+    title: Verificador
+    type: object
+    required:
+      - id
+      - nombre
+      - tipo
+      - origen
+      - fechaCreacion
+      - fechaActualizacion
+    properties:
+      id:
+        type: string
+        description: > 
+          Identificador único de verificador en 
+          formato `UUID`
+      nombre:
+        type: string
+        description: > 
+          Nombre del verificador
+      tipo:
+        <<: *VERIFY_TYPE
+      origen:
+        $ref: "#/definitions/VerifyOrigin"
+      fechaCreacion:
+        type: string
+        format: timestamp
+        description: Fecha de creación
+      fechaActualizacion:
+        type: string
+        format: timestamp
+        description: Fecha de última actualización
+      
+  VerifyDetail:
+    title: Verificador
+    type: object
+    required:
+      - id
+      - nombre
+      - tipo
+      - mensaje
+      - desafio
+      - origen
+      - fechaCreacion
+      - fechaActualizacion
+    properties:
+      id:
+        type: string
+        description: > 
+          Identificador único de verificador en 
+          formato `UUID`
+      nombre:
+        type: string
+        description: > 
+          Nombre del verificador
+      tipo:
+        <<: *VERIFY_TYPE
+      mensaje:
+        $ref: "#/definitions/Message"
+      desafio:
+        $ref: "#/definitions/Challenge"
+      origen:
+        $ref: "#/definitions/VerifyOrigin"
+      fechaCreacion:
+        type: string
+        format: timestamp
+        description: Fecha de creación
+      fechaActualizacion:
+        type: string
+        format: timestamp
+        description: Fecha de última actualización
+
+  CreatedVerify:
+    title: Nuevo Verificador
+    type: object
+    required:
+      - nombre
+      - tipo
+      - mensaje
+      - desafio
+      - origen
+    properties:
+      nombre:
+        type: string
+        description: > 
+          Nombre del verificador
+      tipo:
+        <<: *VERIFY_TYPE
+      mensaje:
+        $ref: "#/definitions/Message"
+      desafio:
+        $ref: "#/definitions/Challenge"
+      origen:
+        $ref: "#/definitions/VerifyOrigin"
+  
+  UpdatedVerify:
+    title: Actualización de Verificador
+    type: object
+    required:
+      - id
+      - nombre
+      - mensaje
+      - desafio
+      - origen
+    properties:
+      id:
+        type: string
+        description: > 
+          Identificador único de verificador en 
+          formato `UUID`
+      nombre:
+        type: string
+        description: > 
+          Nombre del verificador
+      tipo:
+        <<: *VERIFY_TYPE
+      mensaje:
+        $ref: "#/definitions/Message"
+      desafio:
+        $ref: "#/definitions/Challenge"
+      origen:
+        $ref: "#/definitions/VerifyOrigin"
+    
+  ArrayOfVerify:
+    title: Colleción de Verificadores
+    type: array
+    items:
+      $ref: "#/definitions/Verify"
+
+  PaginationOfVerify:
+    title: Paginación de Verificador
+    type: object
+    properties:
+      content:
+        $ref: '#/definitions/ArrayOfVerify'
+      page:
+        $ref: '#/definitions/Page'
+
+  CreatedChallenge:
+    title: Desafío
+    type: object
+    required:
+      - destinatario
+      - tipo
+      - parametros
+    properties:
+      destinatario:
+        type: string
+        description: >
+          Destinatario del desafio, el cual puede ser correo electronico o
+          número telefonico a 10 dígitos.
+      tipo:
+        <<: *VERIFY_TYPE
+      parametros:
+        $ref: "#/definitions/ArrayOfStringParam"
+      metadata:
+        type: object
+        description: >
+          Metainformación para el envío de notificaciones de acuerdo al layout
+          correspondinte 
+        properties:
+          clienteID:
+            type: string
+            description: |
+              Identificador único de cliente
+          prospectoID:
+            type: string
+            description: |
+              Identificador único de prospecto
+  
+  ValidateChallenge:
+    title: Validar Desafío
+    type: object
+    required:
+      - destinatario
+      - tipo
+      - parametros
+      - codigo
+    properties:
+      destinatario:
+        type: string
+        description: >
+          Destinatario del desafio, el cual puede ser correo electronico o
+          número telefonico a 10 digitos.
+      tipo:
+        <<: *VERIFY_TYPE
+      parametros:
+        $ref: "#/definitions/ArrayOfStringParam"
+      codigo:
+        type: string
+        description: |
+          Codigo enviado por correo electronico o sms al destinatario.
+      metadata:
+        type: object
+        description: >
+          Metainformación para el envío de notificaciones de acuerdo al layout
+          correspondinte
+        properties:
+          clienteID:
+            type: string
+            description: |
+              Identificador único de cliente
+          prospectoID:
+            type: string
+            description: |
+              Identificador único de prospecto
+  
+  Intents:
+    title: Intentos
+    required:
+      - total
+      - usados
+    properties:
+      total:
+        description: Número total de intentos disponibles
+        type: number
+        minimum: 1
+        maximum: 10
+      usados:
+        description: Número total de intentos utilizados
+        type: number
+        minimum: 1
+        maximum: 10
+
+  Forwardings:
+    title: Reenvios
+    required:
+      - total
+      - usados
+    properties:
+      total:
+        description: Número total de reenvios disponibles
+        type: number
+        minimum: 1
+        maximum: 10
+      usados:
+        description: Número total de reenvios utilizados
+        type: number
+        minimum: 1
+        maximum: 10
+  
+  ResultValidate:
+    type: object
+    required:
+      - intentos
+      - reenvios
+      - resultado
+    properties:
+      intentos:
+        $ref: "#/definitions/Intents"
+      reenvios:
+        $ref: "#/definitions/Forwardings"
+      resultado:
+        type: boolean
+        description: Resultado de la validación del desafío.
+
+  ArrayOfStringParam:
+    title: Parametros Adicionales
+    description: >
+          Colección de parámetros adicionales con el siguiente formato:
+          
+              [Clave][:][Valor]
+          
+          Ejemplos:
+            
+            - prospectoId:6981f3a3-2810-4214-8ebd-6b1d73ea40c1
+            - clienteId:ef4d53de-a090-489d-844c-7f1c473ef95f
+            - solicitudId:2732d7db-c659-4ec5-adfa-a79036053ade
+    type: array
+    items:
+      type: string
+
+## Search Client 
+  
+  CRM:
+    type: object
+    required:
+      - id
+    properties:
+      id:
+        type: number
+        format: int64
+        description: Identificador único de Cliente asignado por CRM Dynamics
+  
+  ClientMin:
+    type: object
+    required:
+      - id
+      - crm
+      - fechaCreacion
+      - fechaActualizacion
+    properties:
+      id:
+        type: string
+        pattern: '/^(?=[a-f\d]{24}$)(\d+[a-f]|[a-f]+\d)/i'
+        description: >-
+          Identificador Único de Cliente asignado por Mondo DB, en formato
+          `ObjectId`
+      crm:
+        $ref: '#/definitions/CRM'
+      fechaCreacion:
+        type: string
+        format: timestamp
+        description: Fecha de creación
+      fechaActualizacion:
+        type: string
+        format: timestamp
+        description: Fecha de última actualización
+  
+  ArrayOfClientMin:
+    type: array
+    items:
+      $ref: '#/definitions/ClientMin'
+  
+  ClientMinResult:
+    type: object
+    required:
+      - numero
+      - contenido
+    properties:
+      numero:
+        type: string
+        description: Número de coincidencias de clientes
+      contenido:
+        $ref: '#/definitions/ArrayOfClientMin'
+  
+  ProspectMin:
+    type: object
+    required:
+      - id
+      - fechaCreacion
+      - fechaActualizacion
+    properties:
+      id:
+        type: string
+        description: Identificador Único de Prospecto
+      fechaCreacion:
+        type: string
+        format: timestamp
+        description: Fecha de creación
+      fechaActualizacion:
+        type: string
+        format: timestamp
+        description: Fecha de última actualización
+  
+  ArrayOfProspectMin:
+    type: array
+    items:
+      $ref: '#/definitions/ProspectMin'
+  
+  ProspectMinResult:
+    type: object
+    required:
+      - numero
+      - contenido
+    properties:
+      numero:
+        type: string
+        description: Número de coincidencias de prospectos
+      contenido:
+        $ref: '#/definitions/ArrayOfProspectMin'
+  
+  SearchIdentity:
+    type: object
+    required:
+      - existe
+      - total
+      - prospectos
+      - clientes
+    properties:
+      existe:
+        type: boolean
+        description: Indica si encontro coincidencias de la búsqueda solicitada.
+      total:
+        type: number
+        description: Indica el número de concidencias totales.
+      prospectos:
+        $ref: '#/definitions/ProspectMinResult'
+      clientes:
+        $ref: '#/definitions/ClientMinResult'
+
+## Mark Type
+
+  MarkType: &MarkTypeEnum
+    type: string
+    description: |
+      Tipo de Marcación:
+        - REPEP - Registro Público para Evitar Publicidad
+        - REUS - Regístrate en el Registro Público de Usuarios
+    enum:
+      - REPEP
+      - REUS
+      
+## Mark Type
+
+  MarkREUSType: &MarkREUSTypeEnum
+    type: string
+    description: |
+      Tipo de Marcación:
+        - CRM - Customr Relation Management
+        - SAP - Systems Application and Products
+    enum:
+      - CRM
+      - SAP
+
+## Metadata
+  
+  Metadata:
+    title: Meta Información
+    type: object
+    description: Meta información del documento cargado
+    required:
+      - mimeType
+      - mimeName
+      - extension
+      - encoding
+    properties:
+      mimeType: 
+        type: string
+        description: Formato de archivo
+      mimeName:
+        type: string
+        description: Nombre del formato de archivo
+      extension:
+        type: string
+        description: Extensión del documento
+      size:
+        type: integer
+        format: int64
+        description: Tamaño original del documento en bytes
+      encoding:
+        type: string
+        description: Codificación del documento
+      
+## SecureDocument
+
+  CreatedSecureDocument:
+    title: Documento Seguro
+    type: object
+    required:
+      - name
+      - patch
+      - metadata
+      - hash
+    properties:
+      name:
+        type: string
+        description: Nombre del documento
+      patch: 
+        type: string
+        description: Ubicación del documento
+      metadata:
+        $ref: '#/definitions/Metadata'
+      hash:
+        type: string
+        description: SHA-256 del documento en hexadecimal
+
+  SecureDocument:
+    title: Documento Seguro
+    type: object
+    required:
+      - name
+      - patch
+      - metadata
+      - createdAt
+    properties:
+      name:
+        type: string
+        description: Nombre del documento
+      patch: 
+        type: string
+        description: Ubicación del documento
+      metadata:
+        $ref: '#/definitions/Metadata'
+      hash:
+        type: string
+        description: SHA-256 del documento en hexadecimal
+      createdAt:
+        type: string
+        format: timestamp
+        description: Fecha de creación del documento
+  
+  ArrayOfSecureDocument:
+    title: Colleción de Documento Seguro
+    type: array
+    items:
+      $ref: '#/definitions/SecureDocument'
+
+## Mark Logbook
+  
+  MarkLogbook:
+    title: Bitacora de Marcación
+    type: object
+    required:
+      - status
+      - observations
+      - createdAt
+    properties:
+      status:
+        type: string
+        description: Estado de la marcación
+      observations:
+        type: string
+        description: Observaciones de la marcación
+      createdAt:
+        type: string
+        format: timestamp
+        description: Fecha de creación del estado de la marcación 
+    
+  ArrayOfMarkLogbook:
+    title: Colleción de Bitacora de Marcación 
+    type: array
+    items:
+      $ref: '#/definitions/MarkLogbook'
+  
+  CreatedMarkLogbook:
+    title: Bitacora de Marcación
+    type: object
+    required:
+      - status
+      - observations
+    properties:
+      status:
+        type: string
+        description: Estado de la marcación
+      observations:
+        type: string
+        description: Observaciones de la marcación 
+
+## Mark Action 
+
+  MarkAction: &MARK_ACTION
+    type: string
+    description: >
+      Estado de la marcación REUS ó REPEP en los medios de contacto.
+      A continuación se enlistan los constantes y defininiciones
+        - HIGT - Alta de marcación  
+        - DOWN - Baja de marcación
+        - NO_MODIFICATIONS - Sin modificaciones
+    enum:
+      - HIGT
+      - DOWN
+      - NO_MODIFICATIOS
+
+## REPEP
+
+  SummaryREPEP:
+    type: object
+    properties:
+      period:
+        type: string
+        description: Período de ejecución en formato `yyyy-mm-dd`
+        format: date
+      check:
+        type: boolean
+        description: Indica si el teléfono es marcado `TRUE` o desmarcado `FALSE`
+      action:
+        <<: *MARK_ACTION
+      createdAt:
+        type: string
+        format: timestamp
+        description: Fecha de creación del período REPEP
+    example:
+      {
+          "period": "01-02-2021",
+          "check": true,
+          "action": "HIGT",
+          "createdAt": "17-02-2021T09:43:00"
+      }
+  
+  ArrayOfSummaryREPEP:
+    type: array
+    items: 
+      $ref: "#/definitions/SummaryREPEP"
+  
+  BusinessSummaryREPEP:
+    title: Resumen de marcación comercial REPEP
+    type: object
+    properties:
+      total:
+        description: >
+          Total de Teléfonos Comerciales
+        type: integer
+      conciliation:
+        description: >
+          Total de Comerciales conciliados en con clientes de Nacional Monte de Piedad
+        type: integer
+    example:
+      {
+          "total": 0,
+          "conciliation": 0,
+          "discarded": 0,
+          "marked": {
+              "total": 0,
+              "new": 0,
+              "noModifications": 0,
+              "unmarked": 0
+          }
+      }
+        
+  FilterREPEP:
+    title: Filtro REPEP
+    type: object
+    properties:
+      total:
+        title: Total de Teléfonos
+        description: > 
+          Total de teléfonos filtrados
+        type: integer
+      telecomPhones:
+        title: Teléfonos Telecominicaciones
+        description: > 
+          Número de teléfonos, no contactables para sector de telecomunicaciones
+        type: integer
+      businessPhones:
+        title: Teléfonos Comerciales
+        type: integer
+        description: > 
+          Número de teléfonos, no contactables para sector comercial
+      tourismPhones:
+        title: Teléfonos Turíscos
+        type: integer
+        description: > 
+          Número de teléfonos, no contactables para sector turísco
+      business:
+        $ref: "#/definitions/BusinessSummaryREPEP"
+    example:
+      {
+          "total": 0,
+          "telecomPhones": 0,
+          "businessPhones": 0,
+          "tourismPhones": 0,
+          "business": {
+              "total": 0,
+              "conciliation": 0,
+              "discarded": 0,
+              "marked": {
+                  "total": 0,
+                  "new": 0,
+                  "noModifications": 0,
+                  "unmarked": 0
+              }
+          }
+      }
+    
+  SummaryREPEPPeriod:
+    title: Resumen de Período REPEP
+    type: object
+    properties:
+      totalPhones:
+        title: Total de Teléfonos
+        type: integer
+        description: >
+          Total de teléfonos originales de la Lista Total proporcionada por PROFECO
+      leakedPhones:
+        title: Teléfonos filtrados
+        type: integer
+        description: >
+          Total de teléfonos filtrados originales de la Lista Total proporcionada por PROFECO
+      phonesDiscarded:
+        title: Teléfonos descartados
+        type: integer
+        description: >
+          Total de teléfonos originales descartados de la Lista Total proporcionada por PROFECO
+      filters:
+        $ref: "#/definitions/FilterREPEP"
+    example: 
+      {
+          "totalPhones": 0,
+          "leakedPhones": 0,
+          "phonesDiscarded": 0,
+          "filters": {
+              "total": 0,
+              "telecomPhones": 0,
+              "businessPhones": 0,
+              "tourismPhones": 0,
+              "business": {
+                  "total": 0,
+                  "conciliation": 0,
+                  "discarded": 0,
+                  "marked": {
+                      "total": 0,
+                      "new": 0,
+                      "noModifications": 0,
+                      "unmarked": 0
+                  }
+              }
+          }
+      }
+  
+  REPEPPeriod:
+    title: Período REPEP
+    type: object
+    required:
+      - id
+      - type
+      - period
+      - summary
+      - status
+      - observations
+      - createdAt
+      - updatedAt
+    properties:
+      id:
+        type: integer
+        format: int64
+        description: Identificador único de periodo
+      type:
+        type: string
+        description: >
+            Tipo de Marcación:
+            - REPEP - Registro Público para Evitar Publicidad
+            - REUS - Regístrate en el Registro Público de Usuarios
+      period:
+        type: string
+        description: Período de ejecución en formato `yyyy-mm-dd`
+        format: date
+      summary:
+        $ref: '#/definitions/SummaryREPEPPeriod'
+      status:
+        type: string
+        description: Estado de la marcación
+      observations:
+        type: string
+        description: Observaciones de la marcación
+      createdAt:
+        type: string
+        format: timestamp
+        description: Fecha de creación del período REPEP
+      updatedAt:
+        type: string
+        format: timestamp
+        description: Fecha de ultima actualización del período REPEP
+    
+  CreatedREPEPPeriod:
+    title: Creación de Período REPEP
+    type: object
+    required:
+      - type
+      - period
+      - documents
+      - summary
+      - logbook
+      - status
+      - observations
+    properties:
+      type: 
+        type: string
+        description: >
+            Tipo de Marcación:
+            - REPEP - Registro Público para Evitar Publicidad
+            - REUS - Regístrate en el Registro Público de Usuarios
+      period:
+        type: string
+        description: Período de ejecución en formato `yyyy-mm-dd`
+        format: date
+      documents:
+        $ref: '#/definitions/ArrayOfSecureDocument'
+      summary:
+        $ref: '#/definitions/SummaryREPEPPeriod'
+      logbook:
+        $ref: '#/definitions/ArrayOfMarkLogbook'
+      status:
+        type: string
+        description: Estado de la marcación
+      observations:
+        type: string
+        description: Observaciones de la marcación
+    example:
+        {
+            "type": "REPEP",
+            "period": "16-01-20201",
+            "documents": [
+                {
+                    "name": "Lista Total",
+                    "patch": "sftp://titan.nmp.com.mx/X:/REPEP/DDMMYYYY/Lista Total.csv",
+                    "metadata": {
+                        "mimeType": "text/csv",
+                        "mimeName": "csv",
+                        "extension": ".csv",
+                        "encoding": "utf-8"
+                    },
+                    "hash": "e633f4fc79badea1dc5db970cf397c8248bac47cc3acf9915ba60b5d76b0e88f"
+                }
+            ],
+            "summary": {
+                "totalPhones": 1000000,
+                "leakedPhones": 0,
+                "phonesDiscarded": 0,
+                "filters": {
+                    "total": 0,
+                    "telecomPhones": 0,
+                    "businessPhones": 0,
+                    "tourismPhones": 0,
+                    "business": {
+                        "total": 0,
+                        "conciliation": 0,
+                        "discarded": 0,
+                        "marked": {
+                            "total": 0,
+                            "new": 0,
+                            "noModifications": 0,
+                            "unmarked": 0
+                        }
+                    }
+                }
+            },
+            "logbook": [
+                {
+                    "status": "En procesamiento",
+                    "observations": "Extracción, transformación y carga de \"Lista Total.csv\" REPEP",
+                }
+            ],
+            "status": "En procesamiento",
+            "observations": "Extracción, transformación y carga de \"Lista Total.csv\" REPEP"
+        }
+  
+  REPEPPeriodDetail:
+    title: Detalle de Período REPEP
+    type: object
+    required:
+      - id
+      - type
+      - period
+      - documents
+      - summary
+      - logbook
+      - status
+      - observations
+      - createdAt
+      - updatedAt
+    properties:
+      id:
+        type: integer
+        format: int64
+        description: Identificador único de periodo
+      type: 
+        type: string
+        description: >
+            Tipo de Marcación:
+            - REPEP - Registro Público para Evitar Publicidad
+            - REUS - Regístrate en el Registro Público de Usuarios
+      period:
+        type: string
+        description: Período de ejecución en formato `yyyy-mm-dd`
+        format: date
+      documents:
+        $ref: '#/definitions/ArrayOfSecureDocument'
+      summary:
+        $ref: '#/definitions/SummaryREPEPPeriod'
+      logbook:
+        $ref: '#/definitions/ArrayOfMarkLogbook'
+      status:
+        type: string
+        description: Estado de la marcación
+      observations:
+        type: string
+        description: Observaciones de la marcación
+      createdAt:
+        type: string
+        format: timestamp
+        description: Fecha de creación del período REPEP
+      updatedAt:
+        type: string
+        format: timestamp
+        description: Fecha de ultima actualización del período REPEP
+    example:
+        {
+            "id": 1,
+            "type": "REPEP",
+            "period": "16-01-20201",
+            "documents": [
+                {
+                    "name": "Lista Total",
+                    "patch": "sftp://titan.nmp.com.mx/X:/REPEP/DDMMYYYY/Lista Total.csv",
+                    "metadata": {
+                        "mimeType": "text/csv",
+                        "mimeName": "csv",
+                        "extension": ".csv",
+                        "encoding": "utf-8"
+                    },
+                    "hash": "e633f4fc79badea1dc5db970cf397c8248bac47cc3acf9915ba60b5d76b0e88f",
+                    "createdAt": "16-01-2021T00:00:00"
+                }
+            ],
+            "summary": {
+                "totalPhones": 1000000,
+                "leakedPhones": 0,
+                "phonesDiscarded": 0,
+                "filters": {
+                    "total": 0,
+                    "telecomPhones": 0,
+                    "businessPhones": 0,
+                    "tourismPhones": 0,
+                    "business": {
+                        "total": 0,
+                        "conciliation": 0,
+                        "discarded": 0,
+                        "marked": {
+                            "total": 0,
+                            "new": 0,
+                            "noModifications": 0,
+                            "unmarked": 0
+                        }
+                    }
+                }
+            },
+            "logbook": [
+                {
+                    "status": "En procesamiento",
+                    "observations": "Extracción, transformación y carga de \"Lista Total.csv\" REPEP",
+                    "createdAt": "16-01-2021T00:00:00"
+                }
+            ],
+            "status": "En procesamiento",
+            "observations": "Extracción, transformación y carga de \"Lista Total.csv\" REPEP",
+            "createdAt": "16-01-2021T00:00:00",
+            "updatedAt": "16-01-2021T00:00:00"
+        }
+      
+  ArrayOfREPEPPeriod:
+    title: Colección de Periodos REPEP
+    type: array
+    items:
+      $ref: '#/definitions/REPEPPeriod'
+  
+  PaginationOfREPEPPeriod:
+    title: Paginación de periodos REPEP
+    type: object
+    properties:
+      content:
+        $ref: '#/definitions/ArrayOfREPEPPeriod'
+      page:
+        $ref: '#/definitions/Page'
+    example:
+        {
+            "content": [
+                {
+                    "id": 1,
+                    "type": "REPEP",
+                    "period": "16-01-20201",
+                    "summary": {
+                        "totalPhones": 1000000,
+                        "leakedPhones": 0,
+                        "phonesDiscarded": 0,
+                        "filters": {
+                            "total": 0,
+                            "telecomPhones": 0,
+                            "businessPhones": 0,
+                            "tourismPhones": 0,
+                            "business": {
+                                "total": 0,
+                                "conciliation": 0,
+                                "discarded": 0,
+                                "marked": {
+                                    "total": 0,
+                                    "new": 0,
+                                    "noModifications": 0,
+                                    "unmarked": 0
+                                }
+                            }
+                        }
+                    },
+                    "status": "En procesamiento",
+                    "observations": "Extracción, transformación y carga de \"Lista Total.csv\" REPEP",
+                    "createdAt": "16-01-2021T00:00:00",
+                    "updatedAt": "16-01-2021T00:00:00"
+                }
+            ],
+            "page": {
+                "number": 0,
+                "size": 30,
+                "totalPages": 1,
+                "totalElements": 1
+            }
+        }
+
+  PhoneREPEP:
+    type: object
+    example: 
+      {
+          "phoneNumber": "5582575441",
+          "check": true,
+          "summary": [
+              {
+                  "period": "16-02-2021",
+                  "check": true,
+                  "action": "NO_MODIFICATIONS",
+                  "createdAt": "17-02-2021T09:43:00"
+              }
+          ],
+          "createdAt": "17-02-2021T09:43:00",
+          "updatedAt": "17-02-2021T09:43:00",
+      }
+
+## REUS
+
+  SummaryREUSPeriod:
+    title: Resumen de Período REPEP
+    type: object
+    example:
+      {
+          "total": 25000,
+          "persons": 15000,
+          "phones": 20000,
+          "emails": 15000,
+          "filters": {
+              "crm": {
+                  "persons": {
+                      "total": 15000,
+                      "search": 5000,
+                      "discarded": 10000 
+                  },
+                  "phones": {
+                      "total": 1000,
+                      "search": 800,
+                      "marked": {
+                          "total": 0,
+                          "new": 0,
+                          "noModifications": 0,
+                          "unmarked": 0
+                      }
+                  },
+                  "emails": {
+                      "total": 1000,
+                      "search": 500,
+                      "marked": {
+                          "total": 0,
+                          "new": 0,
+                          "noModifications": 0,
+                          "unmarked": 0
+                      }
+                  }
+              },
+              "sap": {
+                  "persons": {
+                      "total": 15000,
+                      "search": 1000
+                  },
+                  "phones": {
+                      "total": 1000,
+                      "search": 800,
+                      "marked": {
+                          "total": 0,
+                          "new": 0,
+                          "noModifications": 0,
+                          "unmarked": 0
+                      }
+                  },
+                  "emails": {
+                      "total": 1000,
+                      "search": 500,
+                      "marked": {
+                          "total": 0,
+                          "new": 0,
+                          "noModifications": 0,
+                          "unmarked": 0
+                      }
+                  }
+              }
+          }
+      }
+  
+  CreatedREUSPeriod:
+    title: Creación de Período REPEP
+    type: object
+    required:
+      - type
+      - period
+      - documents
+      - summary
+      - logbook
+      - status
+      - observations
+    properties:
+      type: 
+        type: string
+        <<: *MarkTypeEnum
+      period:
+        type: string
+        description: Período de ejecución en formato `yyyy-mm-dd`
+        format: date
+      documents:
+        $ref: '#/definitions/ArrayOfSecureDocument'
+      summary:
+        $ref: '#/definitions/SummaryREUSPeriod'
+      logbook:
+        $ref: '#/definitions/ArrayOfMarkLogbook'
+      status:
+        type: string
+        description: Estado de la marcación
+      observations:
+        type: string
+        description: Observaciones de la marcación
+    example:
+      {
+          "type": "REUS",
+          "period": "16-01-20201",
+          "documents": [
+              {
+                  "name": "Lista Total",
+                  "patch": "sftp://titan.nmp.com.mx/X:/REPEP/DDMMYYYY/Lista Total.csv",
+                  "metadata": {
+                      "mimeType": "text/csv",
+                      "mimeName": "csv",
+                      "extension": ".csv",
+                      "encoding": "utf-8"
+                  },
+                  "hash": "e633f4fc79badea1dc5db970cf397c8248bac47cc3acf9915ba60b5d76b0e88f"
+              }
+          ],
+          "summary": {
+              "totalPhones": 1000000,
+              "leakedPhones": 0,
+              "phonesDiscarded": 0,
+              "filters": {
+                  "total": 0,
+                  "telecomPhones": 0,
+                  "businessPhones": 0,
+                  "tourismPhones": 0,
+                  "business": {
+                      "total": 0,
+                      "conciliation": 0,
+                      "discarded": 0,
+                      "marked": {
+                          "total": 0,
+                          "new": 0,
+                          "noModifications": 0,
+                          "unmarked": 0
+                      }
+                  }
+              }
+          },
+          "logbook": [
+              {
+                  "status": "En procesamiento",
+                  "observations": "Extracción, transformación y carga de \"Lista Total.csv\" REPEP",
+              }
+          ],
+          "status": "En procesamiento",
+          "observations": "Extracción, transformación y carga de \"Lista Total.csv\" REPEP"
+      }
+    
+  REUSPeriod:
+      title: Período REPEP
+      type: object
+      required:
+        - id
+        - type
+        - period
+        - summary
+        - status
+        - observations
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Identificador único de periodo
+        type: 
+          $ref: '#/definitions/MarkType'
+        period:
+          type: string
+          description: Período de ejecución en formato `yyyy-mm-dd`
+          format: date
+        summary:
+          $ref: '#/definitions/SummaryREPEPPeriod'
+        status:
+          type: string
+          description: Estado de la marcación
+        observations:
+          type: string
+          description: Observaciones de la marcación
+        createdAt:
+          type: string
+          format: timestamp
+          description: Fecha de creación del período REPEP
+        updatedAt:
+          type: string
+          format: timestamp
+          description: Fecha de ultima actualización del período REPEP
+    
+  REUSPeriodDetail:
+    title: Detalle de Período REPEP
+    type: object
+    required:
+      - id
+      - type
+      - period
+      - documents
+      - summary
+      - logbook
+      - status
+      - observations
+      - createdAt
+      - updatedAt
+    properties:
+      id:
+        type: integer
+        format: int64
+        description: Identificador único de periodo
+      type: 
+        type: string
+        <<: *MarkTypeEnum
+      period:
+        type: string
+        description: Período de ejecución en formato `yyyy-mm-dd`
+        format: date
+      documents:
+        $ref: '#/definitions/ArrayOfSecureDocument'
+      summary:
+        $ref: '#/definitions/SummaryREUSPeriod'
+      logbook:
+        $ref: '#/definitions/ArrayOfMarkLogbook'
+      status:
+        type: string
+        description: Estado de la marcación
+      observations:
+        type: string
+        description: Observaciones de la marcación
+      createdAt:
+        type: string
+        format: timestamp
+        description: Fecha de creación del período REPEP
+      updatedAt:
+        type: string
+        format: timestamp
+        description: Fecha de ultima actualización del período REPEP
+    example:
+      {
+          "id": 1,
+          "type": "REUS",
+          "period": "16-01-20201",
+          "documents": [
+              {
+                  "name": "B27-00816012021",
+                  "patch": "sftp://titan.nmp.com.mx/X:/REUS/DDMMYYYY/B27-00816012021.reus",
+                  "metadata": {
+                      "mimeType": "text/reus",
+                      "mimeName": "reus",
+                      "extension": ".reus",
+                      "encoding": "utf-8"
+                  },
+                  "hash": "e633f4fc79badea1dc5db970cf397c8248bac47cc3acf9915ba60b5d76b0e88f",
+                  "createdAt": "16-01-2021T00:00:00"
+              },
+              {
+                  "name": "V27-00816012021",
+                  "patch": "sftp://titan.nmp.com.mx/X:/REUS/DDMMYYYY/V27-00816012021.reus",
+                  "metadata": {
+                      "mimeType": "text/reus",
+                      "mimeName": "reus",
+                      "extension": ".reus",
+                      "encoding": "utf-8"
+                  },
+                  "hash": "e633f4fc79badea1dc5db970cf397c8248bac47cc3acf9915ba60b5d76b0e88f",
+                  "createdAt": "16-01-2021T00:00:00"
+              },
+              {
+                  "name": "M27-00816012021",
+                  "patch": "sftp://titan.nmp.com.mx/X:/REUS/DDMMYYYY/M27-00816012021.reus",
+                  "metadata": {
+                      "mimeType": "text/reus",
+                      "mimeName": "reus",
+                      "extension": ".reus",
+                      "encoding": "utf-8"
+                  },
+                  "hash": "e633f4fc79badea1dc5db970cf397c8248bac47cc3acf9915ba60b5d76b0e88f",
+                  "createdAt": "16-01-2021T00:00:00"
+              }
+          ],
+          "summary": {
+              "total": 25000,
+              "persons": 15000,
+              "phones": 20000,
+              "emails": 15000,
+              "filters": {
+                "crm": {
+                      "persons": {
+                          "total": 15000,
+                          "search": 1000,
+                          "discarded": 10000 
+                      },
+                      "phones": {
+                          "total": 1000,
+                          "search": 800,
+                          "marked": {
+                              "total": 0,
+                              "new": 0,
+                              "noModifications": 0,
+                              "unmarked": 0
+                          }
+                        },
+                      "emails": {
+                          "total": 1000,
+                          "search": 500,
+                          "marked": {
+                              "total": 0,
+                              "new": 0,
+                              "noModifications": 0,
+                              "unmarked": 0
+                          }
+                      }
+                  },
+                  "sap": {
+                      "persons": {
+                          "total": 15000,
+                          "search": 1000
+                      },
+                        "phones": {
+                          "total": 1000,
+                          "search": 800,
+                          "marked": {
+                              "total": 0,
+                              "new": 0,
+                                "noModifications": 0,
+                              "unmarked": 0
+                          }
+                      },
+                      "emails": {
+                            "total": 1000,
+                          "search": 500,
+                          "marked": {
+                              "total": 0,
+                              "new": 0,
+                                "noModifications": 0,
+                              "unmarked": 0
+                          }
+                      }
+                  }
+              }
+            },
+          "logbook": [
+              {
+                  "status": "En procesamiento",
+                  "observations": "Extracción, transformación y carga de \"Lista Total.csv\" REPEP",
+                  "createdAt": "16-01-2021T00:00:00"
+              }
+            ],
+          "status": "En procesamiento",
+          "observations": "Extracción, transformación y carga de \"Lista Total.csv\" REPEP",
+          "createdAt": "16-01-2021T00:00:00",
+            "updatedAt": "16-01-2021T00:00:00"
+      }
+  
+  ArrayOfREUSPeriod:
+    type: array
+    items:
+      $ref: "#/definitions/REUSPeriodDetail"
+
+  PaginationOfREUSPeriod:
+    type: object
+    properties:
+      content:
+        $ref: '#/definitions/ArrayOfREPEPPeriod'
+      page:
+        $ref: '#/definitions/Page'
+    example:
+      {
+          "content": [
+              {
+                  "id": 1,
+                  "type": "REPEP",
+                  "period": "16-01-20201",
+                  "summary": {
+                      "total": 25000,
+                      "persons": 15000,
+                      "phones": 20000,
+                      "emails": 15000,
+                      "filters": {
+                          "crm": {
+                              "persons": {
+                                  "total": 15000,
+                                  "search": 1000",
+                                  "discarded": 10000 
+                              },
+                              "phones": {
+                                  "total": 1000,
+                                  "search": 800,
+                                  "marked": {
+                                      "total": 0,
+                                      "new": 0,
+                                      "noModifications": 0,
+                                      "unmarked": 0
+                                  }
+                              },
+                              "emails": {
+                                  "total": 1000,
+                                  "search": 500,
+                                  "marked": {
+                                      "total": 0,
+                                      "new": 0,
+                                      "noModifications": 0,
+                                      "unmarked": 0
+                                  }
+                              }
+                          },
+                          "sap": {
+                              "persons": {
+                                  "total": 15000,
+                                  "search": 1000
+                              },
+                              "phones": {
+                                  "total": 1000,
+                                  "search": 800,
+                                  "marked": {
+                                      "total": 0,
+                                      "new": 0,
+                                      "noModifications": 0,
+                                      "unmarked": 0
+                                  }
+                              },
+                              "emails": {
+                                  "total": 1000,
+                                  "search": 500,
+                                  "marked": {
+                                      "total": 0,
+                                      "new": 0,
+                                      "noModifications": 0,
+                                      "unmarked": 0
+                                  }
+                              }
+                          }
+                      }
+                  },
+                  "status": "En procesamiento",
+                  "observations": "Extracción, transformación y carga de \"Lista Total.csv\" REPEP",
+                  "createdAt": "16-01-2021T00:00:00",
+                  "updatedAt": "16-01-2021T00:00:00"
+              }
+          ],
+          "page": {
+              "number": 0,
+              "size": 30,
+              "totalPages": 1,
+              "totalElements": 1
+          }
+      }
+
+  PhoneREUS:
+    type: object
+    example: 
+        {
+            "phoneNumber": "5582575441",
+            "check": true,
+            "summary": [
+                {
+                    "period": "01-02-2021",
+                    "check": true,
+                    "action": "HIGT",
+                    "createdAt": "17-02-2021T09:43:00"
+                },
+                {
+                    "period": "16-02-2021",
+                    "check": true,
+                    "action": "NO_MODIFICATIONS",
+                    "createdAt": "17-02-2021T09:43:00"
+                }
+            ],
+            "createdAt": "01-02-2021T09:43:00",
+            "updatedAt": "17-02-2021T09:43:00",
+        }
+    
+  EmailREUS:
+    type: object
+    example: 
+      {
+            "email": "cristian_gerar@hotmail.com",
+            "check": true,
+            "summary": [
+                {
+                    "period": "16-02-2021",
+                    "check": true,
+                    "action": "HIGT",
+                    "createdAt": "17-02-2021T09:43:00"
+                }
+            ],
+            "createdAt": "17-02-2021T09:43:00",
+            "updatedAt": "17-02-2021T09:43:00"
+        }
+
+## Summary REUS
+    
+  SummaryREUS:
+    type: object
+    properties:
+      period:
+        type: string
+        description: Período de ejecución en formato `yyyy-mm-dd`
+        format: date
+      check:
+        type: boolean
+        description: Indica si el teléfono es marcado `TRUE` o desmarcado `FALSE`
+      action:
+        <<: *MARK_ACTION
+      createdAt:
+        type: string
+        format: timestamp
+        description: Fecha de creación del período REPEP
+    example:
+      {
+          "period": "01-02-2021",
+          "check": true,
+          "action": "HIGT",
+          "createdAt": "17-02-2021T09:43:00"
+      }
+        
+responses:
+
+## Response
+  
+  NoContent:
+    description: 204 - No Content
+  
+  BadRequest:
+    description: 400 - Bad Request
+    schema:
+      $ref: "#/definitions/BadRequest"
+  
+  Unauthorized:
+    description: 401 - Unauthorized
+    schema:
+      $ref: "#/definitions/Unauthorized"
+  
+  Forbidden:
+    description: 403 - Forbidden
+    schema:
+      $ref: "#/definitions/Forbidden"
+  
+  NotFound:
+    description: 404 - Not Found
+    schema:
+      $ref: "#/definitions/NotFound"
+  
+  InternalServerError:
+    description: 500 - Internal Server Error
+    schema:
+      $ref: "#/definitions/InternalServerError"
+
+## GET  /verificadores
+
+  GetPaginationOfVerifyResponseV1:
+    description: 200 - Ok
+    schema:
+      $ref: "#/definitions/PaginationOfVerify"
+    examples:
+      application/json:
+        {
+            "content": [
+                {
+                    "id": "60c8e52a219166f4c9f028bb",
+                    "nombre": "Verificador correo electrónico cliente",
+                    "tipo": "EMAIl",
+                    "origen": {
+                        "unidadOrganizacional": "NMP",
+                        "canal": "Gestión de Clientes"
+                    },
+                    "fechaCreacion": "2021-06-14T00:00:00",
+                    "fechaActualizacion": "2021-06-14T00:00:00"
+                },
+                {
+                    "id": "60c8e52a219166f4c9f028bb",
+                    "nombre": "Verificador teléfono cliente",
+                    "tipo": "PHONE",
+                    "origen": {
+                        "unidadOrganizacional": "NMP",
+                        "canal": "Gestión de Clientes"
+                    },
+                    "fechaCreacion": "2021-06-14T00:00:00",
+                    "fechaActualizacion": "2021-06-14T00:00:00"
+                },
+                {
+                    "id": "60c8e52a219166f4c9f028bb",
+                    "nombre": "Verificador correo electrónico cliente",
+                    "tipo": "EMAIl",
+                    "origen": {
+                        "unidadOrganizacional": "NMP",
+                        "canal": "Paradigmas"
+                    },
+                    "fechaCreacion": "2021-06-14T00:00:00",
+                    "fechaActualizacion": "2021-06-14T00:00:00"
+                },
+                {
+                    "id": "60c8e52a219166f4c9f028bb",
+                    "nombre": "Verificador teléfono cliente",
+                    "tipo": "PHONE",
+                    "origen": {
+                        "unidadOrganizacional": "NMP",
+                        "canal": "Paradigmas"
+                    },
+                    "fechaCreacion": "2021-06-14T00:00:00",
+                    "fechaActualizacion": "2021-06-14T00:00:00"
+                }
+            ],
+            "page": {
+                "number": 0,
+                "size": 30,
+                "totalPages": 1,
+                "totalElements": 4
+            }
+        }
+
+## POST /verificadores
+
+  CreatedVerifyResponseV1:
+    description: 201 - Created
+    schema:
+      $ref: "#/definitions/VerifyDetail"
+    examples:
+      application/json:
+        {
+            "id": "60c8e52a219166f4c9f028bb",
+            "nombre": "Verificador correo electrónico cliente",
+            "tipo": "EMAIl",
+            "mensaje": {
+                "remitente": "no-reply@montepiedad.com.mx",
+                "asunto": "Verificación de correo electrónico",
+                "tipo": "EMAIl",
+                "plantilla": {
+                    "id": "60c8f31dbf80484ab8fcd190",
+                    "parametros": [
+                        "nombre"
+                    ]
+                }
+            },
+            "desafio": {
+                "generador": "/^[0-9]{5}$/i",
+                "numeroIntentos": 3,
+                "vigenciaIntento": 172800,
+                "validacionIntento": 3,
+                "reenvioIntento": 0,
+                "reestablecimientoIntentos": 172800
+            },
+            "origen": {
+                "unidadOrganizacional": "NMP",
+                "canal": "Kiosko"
+            },
+            "fechaCreacion": "2021-06-14T00:00:00",
+            "fechaActualizacion": "2021-06-14T00:00:00"
+        }
+
+## GET  /verificadores/{verifyId}
+
+  GetVerifyDetailByIdResponseV1:
+    description: 200 - Ok
+    schema:
+      $ref: "#/definitions/VerifyDetail"
+    examples:
+      application/json:
+        {
+            "id": "60c8e52a219166f4c9f028bb",
+            "nombre": "Verificador correo electrónico cliente",
+            "tipo": "EMAIl",
+            "mensaje": {
+                "remitente": "no-reply@montepiedad.com.mx",
+                "asunto": "Verificación de correo electrónico",
+                "tipo": "EMAIl",
+                "plantilla": {
+                    "id": "60c8f31dbf80484ab8fcd190",
+                    "parametros": [
+                        "nombre"
+                    ]
+                }
+            },
+            "desafio": {
+                "generador": "/^[0-9]{5}$/i",
+                "numeroIntentos": 3,
+                "vigenciaIntento": 172800,
+                "validacionIntento": 3,
+                "reenvioIntento": 0,
+                "reestablecimientoIntentos": 172800
+            },
+            "origen": {
+                "unidadOrganizacional": "NMP",
+                "canal": "Kiosko"
+            },
+            "fechaCreacion": "2021-06-14T00:00:00",
+            "fechaActualizacion": "2021-06-14T00:00:00"
+        }
+
+## PUT  /verificadores/{verifyId}
+
+  PutVerifyDetailByIdResponseV1:
+    description: 200 - Ok
+    schema:
+      $ref: "#/definitions/VerifyDetail"
+    examples:
+      application/json:
+        {
+            "id": "60c8e52a219166f4c9f028bb",
+            "nombre": "Verificador correo electrónico cliente",
+            "tipo": "EMAIl",
+            "mensaje": {
+                "remitente": "no-reply@montepiedad.com.mx",
+                "asunto": "Verificación de correo electrónico",
+                "tipo": "EMAIl",
+                "plantilla": {
+                    "id": "60c8f31dbf80484ab8fcd190",
+                    "parametros": [
+                        "nombre"
+                    ]
+                }
+            },
+            "desafio": {
+                "generador": "/^[0-9]{5}$/i",
+                "numeroIntentos": 3,
+                "vigenciaIntento": 172800,
+                "validacionIntento": 3,
+                "reenvioIntento": 0,
+                "reestablecimientoIntentos": 172800
+            },
+            "origen": {
+                "unidadOrganizacional": "NMP",
+                "canal": "Kiosko"
+            },
+            "fechaCreacion": "2021-06-14T00:00:00",
+            "fechaActualizacion": "2021-06-14T00:00:00"
+        }
+
+## POST /validatores/result
+  ResponsePOSTValidateV1:
+    description: 200 - Ok
+    schema:
+      $ref: '#/definitions/ResultValidate'
+    examples:
+      application/json:
+        {
+            "intentos": {
+                "total": 3,
+                "usados": 1
+            },
+            "reenvios": {
+                "total": 3,
+                "usados": 1
+            },
+            "resultado": true
+        }
+
+## GET  /clientes/{clientId}/repep
+  GetREPEPByClientIdResponseV1:
+    description: 200 - Ok
+    schema:
+      $ref: "#/definitions/ArrayOfSummaryREPEP"
+    examples:
+      application/json:
+        [
+            {
+                "phoneNumber": "5582575441",
+                "check": true,
+                "createdAt": "17-02-2021T09:43:00",
+                "updatedAt": "17-02-2021T09:43:00"
+            }
+        ]
+
+## GET  /clientes/{clientId}/reus
+  GetReusByClientIdResponseV1:
+    description: 200 - Ok
+    examples:
+      application/json:
+        {
+            "phones": [
+                {
+                    "phoneNumber": "5582575441",
+                    "check": true,
+                    "createdAt": "17-02-2021T09:43:00",
+                    "updatedAt": "17-02-2021T09:43:00"
+                }
+            ],
+            "emails": [
+                {
+                    "email": "cristian_gerar@hotmail.com",
+                    "check": true,
+                    "createdAt": "17-02-2021T09:43:00",
+                    "updatedAt": "17-02-2021T09:43:00"
+                }
+            ]
+        }
+
+## GET  /clientes/{clientId}/reus/report
+  GetPDFReusByClientIdResponseV1:
+    description: 200 - Ok
+    schema:
+      type: file
+    examples:
+      application/pdf:
+
+## GET  /clientes/{cliendId}/repep/report  
+  
+  ResponseGetReportRepepByClientIdV1:
+    description: 200 - Ok
+    schema:
+      type: file
+    examples:
+      application/pdf:
+
+## GET  /clientes/{cliendId}/telefonos/{phoneNumber}/repep
+
+  ResponseGetRepepByClientIdAndPhoneNumberV1:
+    description: 200 - Ok
+    schema:
+      $ref: "#/definitions/PhoneREPEP"
+    examples:
+      application/json:
+        {
+            "phoneNumber": "5582575441",
+            "check": true,
+            "summary": [
+                {
+                    "period": "16-02-2021",
+                    "check": true,
+                    "action": "NO_MODIFICATIONS",
+                    "createdAt": "17-02-2021T09:43:00"
+                }
+            ],
+            "createdAt": "17-02-2021T09:43:00",
+            "updatedAt": "17-02-2021T09:43:00"
+        }
+
+## POST /clientes/{cliendId}/telefonos/{phoneNumber}/repep
+  
+  ResponsePostRepepByClientIdAndPhoneNumberV1:
+    description: 201 - Created
+    schema:
+      $ref: "#/definitions/PhoneREPEP"
+  
+## GET  /clientes/{cliendId}/telefonos/{phoneNumber}/repep/report  
+  
+  ResponseGetReportRepepByClientIdAndPhoneNumberV1:
+    description: 200 - Ok
+    schema:
+      type: file
+    examples:
+      application/pdf:
+
+## GET  /clientes/{cliendId}/telefonos/{phoneNumber}/reus
+  
+  ResponseGetReusByClientIdAndPhoneNumberV1:
+    description: 200 - Ok
+    schema:
+      $ref: "#/definitions/PhoneREUS"
+
+## POST /clientes/{cliendId}/telefonos/{phoneNumber}/reus
+  
+  ResponsePostReusByClientIdAndPhoneNumberV1:
+    description: 201 - Created
+    schema:
+      $ref: "#/definitions/PhoneREUS"
+
+## GET  /clientes/{cliendId}/telefonos/{phoneNumber}/reus/report
+  
+  ResponseGetPdfReusByClientIdAndPhoneNumberV1:
+    description: 200 - Ok
+    schema:
+      type: file
+    examples:
+      application/pdf:
+
+## GET  /clientes/{cliendId}/correos/{email}/reus
+          
+  ResponseGetReusByClientIdAndEmailV1:
+    description: 200 - Ok
+    schema:
+      $ref: "#/definitions/EmailREUS"
+
+## POST /clientes/{cliendId}/correos/{email}/reus
+  
+  ResponsePostReusByClientIdAndEmailV1:
+    description: 201 - Created
+    schema:
+      $ref: "#/definitions/EmailREUS"
+  
+  ResponseGetPdfReusByClientIdAndEmailV1:
+    description: 200 - Ok
+    schema:
+      type: file
+    examples:
+      application/pdf:
+
+## GET  /clientes/busqueda
+
+  ResponseGetExistsClientsByFilterV1:
+    description: 200 - Ok
+    schema:
+      $ref: '#/definitions/SearchIdentity'
+    examples:
+      application/json:
+        {
+            "existe": true,
+            "total": 2,
+            "prospectos": {
+                "numero": 1,
+                "contenido": [
+                    {
+                        "id": "7914117895",
+                        "fechaCreacion": "17-02-2021T09:43:00",
+                        "fechaActualizacion": "17-02-2021T09:43:00"
+                    }
+                ]
+            },
+            "clientes": {
+                "numero": 1,
+                "contenido": [
+                    {
+                        "id": "60e4c3f72b748efcb05d4669",
+                        "crm": {
+                            "id": "8532620608"
+                        },
+                        "fechaCreacion": "17-02-2021T09:43:00",
+                        "fechaActualizacion": "17-02-2021T09:43:00"
+                    }
+                ]
+            }
+        }
+
+## GET  /clientes/repep
+    
+  GetPaginationREPEPResponseV1:
+    description: 200 - Ok
+    schema:
+      $ref: "#/definitions/PaginationOfREPEPPeriod"
+    examples:
+      application/json:
+        {
+            "content": [
+                {
+                    "id": 1,
+                    "type": "REPEP",
+                    "period": "16-01-20201",
+                    "marked": {
+                        "total": 0,
+                        "new": 0,
+                        "noModifications": 0,
+                        "unmarked": 0
+                    },
+                    "status": "En procesamiento",
+                    "observations": "Extracción, transformación y carga de \"Lista Total.csv\" REPEP",
+                    "createdAt": "16-01-2021T00:00:00",
+                    "updatedAt": "16-01-2021T00:00:00"
+                }
+            ],
+            "page": {
+                "number": 0,
+                "size": 0,
+                "totalPages": 0,
+                "totalElements": 0
+            }
+        }
+      
+## GET  /clientes/repep/report
+    
+  GetPdfPaginationREPEPResponseV1:
+    description: 200 - Ok
+    schema:
+      type: file
+    examples:
+      application/pdf:
+      
+## POST /clientes/repep
+
+  PostCreatedREPEPPerioResponseV1:
+    description: 201 - Created
+    schema:
+      $ref: "#/definitions/REPEPPeriodDetail"
+
+## GET  /clientes/repep/{period}/report
+  GetReportREPEPDetailByPeriodResponseV1:
+    description: 200 - Ok
+    schema:
+      type: file
+    examples:
+      application/pdf:
+
+## GET  /clientes/repep/{period}
+            
+  GetREPEPPeriodDetailByPeriodResponseV1:
+    description: 200 - Ok
+    schema:
+      $ref: "#/definitions/REPEPPeriodDetail"
+
+## GET  /clientes/reus
+
+  GetPaginationREUSResponseV1:
+    description: 200 - Ok
+    schema:
+      $ref: "#/definitions/PaginationOfREUSPeriod"
+    examples:
+      application/json:
+        {
+            "content": [
+                {
+                    "id": 2,
+                    "type": "REUS",
+                    "period": "16-01-20201",
+                    "crm": {
+                        "phonesmarked": {
+                            "total": 0,
+                            "new": 0,
+                            "noModifications": 0,
+                            "unmarked": 0
+                        },
+                        "emailMarked": {
+                            "total": 0,
+                            "new": 0,
+                            "noModifications": 0,
+                            "unmarked": 0
+                        }
+                    },
+                    "sap": {
+                        "phonesmarked": {
+                            "total": 0,
+                            "new": 0,
+                            "noModifications": 0,
+                            "unmarked": 0
+                        },
+                        "emailMarked": {
+                            "total": 0,
+                            "new": 0,
+                            "noModifications": 0,
+                            "unmarked": 0
+                        }
+                    },
+                    "status": "En procesamiento",
+                    "observations": "Extracción, transformación y carga de \"M000-000000.reus\" REUS",
+                    "createdAt": "16-01-2021T00:00:00",
+                    "updatedAt": "16-01-2021T00:00:00"
+                }
+            ],
+            "page": {
+                "number": 0,
+                "size": 0,
+                "totalPages": 0,
+                "totalElements": 0
+            }
+        }
+
+## POST /clientes/reus
+
+  PostCreatedREUSPerioResponseV1:
+    description: 201 - Created
+    schema:
+      $ref: "#/definitions/REUSPeriodDetail"
+            
+## GET  /clientes/reus/report
+  GetReportPaginationREUSPeriodResponseV1:
+    description: 200 - Ok
+    schema:
+      type: file
+    examples:
+      application/pdf:
+      
+## GET  /clientes/reus/{period}
+
+  GetREUSDetailByPeriodResponseV1:
+    description: 200 - Ok
+    schema:
+      $ref: "#/definitions/REUSPeriodDetail"
+    examples:
+      application/json:
+        {
+            "id": 1,
+            "type": "REUS",
+            "period": "16-01-20201",
+            "summary": {
+                "total": 25000,
+                "persons": 15000,
+                "phones": 20000,
+                "emails": 15000,
+                "filters": {
+                    "crm": {
+                        "persons": {
+                            "total": 15000,
+                            "search": 1000,
+                            "discarded": 14000 
+                        },
+                        "phones": {
+                            "total": 1000,
+                            "search": 800,
+                            "marked": {
+                                "total": 0,
+                                "new": 0,
+                                "noModifications": 0,
+                                "unmarked": 0
+                            }
+                        },
+                        "emails": {
+                            "total": 1000,
+                            "search": 500,
+                            "marked": {
+                                "total": 0,
+                                "new": 0,
+                                "noModifications": 0,
+                                "unmarked": 0
+                            }
+                        }
+                    },
+                    "sap": {
+                        "persons": {
+                            "total": 15000,
+                            "search": 1000
+                        },
+                        "phones": {
+                            "total": 1000,
+                            "search": 800,
+                            "marked": {
+                                "total": 0,
+                                "new": 0,
+                                "noModifications": 0,
+                                "unmarked": 0
+                            }
+                        },
+                        "emails": {
+                            "total": 1000,
+                            "search": 500,
+                            "marked": {
+                                "total": 0,
+                                "new": 0,
+                                "noModifications": 0,
+                                "unmarked": 0
+                            }
+                        }
+                    }
+                }
+            },
+            "status": "En procesamiento",
+            "observations": "Extracción, transformación y carga de \"Lista Total.csv\" REPEP",
+            "createdAt": "16-01-2021T00:00:00",
+            "updatedAt": "16-01-2021T00:00:00"
+        }
+
+## GET  /clientes/reus/{period}/report
+  GetPDFREUSDetailByPeriodResponseV1:
+    description: 200 - Ok
+    schema:
+      type: file
+    examples:
+      application/pdf:
+
+parameters:
+  
+## Header Params
+  UOHeader:
+    in: header
+    name: unidadOrganizacional
+    type: string
+    <<: *UnidadOrganizacional
+    description: Unidad organizacional
+    default: "FMP"
+    required: true
+  
+  ChannelHeader:
+    in: header
+    name: canal
+    type: string
+    description: Canal
+    default: "Fénix"
+    required: true
+  
+  ProductHeader:
+    in: header
+    name: producto
+    type: string
+    description: Producto
+    default: "Crédito Personal"
+    required: true  
+    
+  DataOriginHeader:
+    in: header
+    name: origenDato
+    type: string
+    description: Origen de los datos
+    default: "Fénix Web"
+    required: true
+
+## Query Params  
+  
+  UOQueryParam:
+    in: query
+    name: origin.unidadOrganizacional
+    type: string
+    <<: *UnidadOrganizacional
+    description: Unidad organizacional
+    default: "FMP"
+  
+  ChannelQueryParam:
+    in: query
+    name: origin.canal
+    type: string
+    description: Canal
+    default: "Fénix & Paradigmas"
+  
+  ProductQueryParam:
+    in: query
+    name: origin.producto
+    type: string
+    description: Producto
+    default: "Crédito Personal"
+    
+  DataOriginQueryParam:
+    in: query
+    name: origin.origenDato
+    type: string
+    description: Origen de los datos
+    default: "Web Fénix"
+  
+  PageNumberQueryParam:
+    in: query
+    name: pageNumber
+    type: integer
+    format: int32
+    description: Número de página a mostrar en la búsqueda
+    minimum: 0
+    default: 0
+    
+  PageSizeQueryParam:
+    in: query
+    name: pageSize
+    type: integer
+    format: int32
+    description: Número de elementos máximos a mostrar por página en la búsqueda 
+    minimum: 1
+    maximum: 50
+    default: 30
+    
+  OrderByQueryParam:
+    in: query
+    name: orderBy
+    type: string
+    description: Campo para ordenamiento de resultados
+    default: "createdAt"
+    
+  SortOrderQueryParam:
+    in: query
+    name: sortOrder
+    type: string
+    <<: *SORT_DIRECTION
+    description: Ordenamiento ascendente y descendente
+    default: "ASC"
+  
+  FromCreatedAtQueryParam:
+    in: query
+    name: fromCreatedAt
+    type: string
+    format: date-time
+    description: Desde la fecha de Creación en formato `yyyy-mm-ddThh:mm:ss` definido en el RFC3339
+    default: "2020-05-16T:09:00:00"
+    
+  ToCreatedAtQueryParam:
+    in: query
+    name: toCreatedAt
+    type: string
+    format: date-time
+    description: Hasta la fecha de Creación en formato `yyyy-mm-ddThh:mm:ss` definido en el RFC3339
+    default: "2020-05-16T:09:00:00"
+  
+  FromPeriodQueryParam:
+    in: query
+    name: fromPeriod
+    description: Desde el periodo, siguiendo el formato `yyyy-mm-dd`
+    type: string
+    format: date
+    default: "2020-05-16"
+  
+  ToPeriodQueryParam:
+    in: query
+    name: toPeriod
+    description: Hasta el Periodo, siguiendo el formato `yyyy-mm-dd`
+    type: string
+    format: date
+    default: "2021-05-16"
+  
+  MarkREUSTypeQueryParam:
+    in: query
+    name: reusType
+    description: Tipo de marcación REUS (CRM ó SAP)
+    type: string
+    <<: *MarkREUSTypeEnum
+    default: "CRM"
+  
+  PhoneOrEmailParam:
+    in: query
+    name: type
+    description: Indica el tipo de marcación de teléfonos ó correos electrónicos de un cliente.
+    type: string
+    format: date
+    default: "PHONE"
+  
+  WithPhonesQueryParam:
+    in: query
+    name: withPhones
+    type: boolean
+    description: Indica si deben obtenerse los teléfonos asociados a un cliente.
+    default: true
+  
+  WithEmailsQueryParam:
+    in: query
+    name: withEmails
+    type: boolean
+    description: Indica si deben obtenerse los correos electrónicos asociados a un cliente.
+    default: true
+  
+## Path Params
+
+  ClientIdPath:
+    in: path
+    name: clientId
+    required: true
+    description: >-
+      Identificador único de cliente asigando por Mondo DB en formato
+      `ObjectId`
+    type: string
+    default: "5612f934e0922d3ced53d84828da4f0160fb475d"
+  
+  DocumentIdPath:
+    in: path
+    name: documentId
+    required: true
+    description: >-
+      Identificador único de documento asigando por Mondo DB en formato
+      `ObjectId`
+    type: string
+    default: "5612f934e0922d3ced53d84828da4f0160fb475d"
+  
+  PhoneNumberPath:
+    in: path
+    name: phoneNumber
+    required: true
+    description: >-
+      Número de teléfono
+    type: string
+    default: "5582575441"
+  
+  EmailIdNumberPath:
+    in: path
+    name: email
+    required: true
+    description: >-
+      Correo electrónico
+    type: string
+    default: "cristian_gerar@hotmail.com"
+
+  PeriodPath:
+    in: path
+    name: period
+    required: true
+    description: >-
+      Periodo en formato `yyyy-mm-dd`
+    type: string
+    format: date
+    default: '2021-01-01'
+
+  VerifyIdPath:
+    in: path
+    name: verifyId
+    required: true
+    description: >-
+      Identificador único del verificador generado en formato `ObjectId`
+    type: string
+    default: "60c8e52a219166f4c9f028bb"
+
+## Body Param
+
+## POST /verificadores
+
+  CreatedVerifyBodyParam:
+    in: body
+    name: Verify
+    description: Permite crear un nuevo verificador
+    schema: 
+      $ref: "#/definitions/CreatedVerify"
+      example:
+        {
+            "nombre": "Verificador correo electrónico cliente",
+            "tipo": "EMAIl",
+            "mensaje": {
+                "remitente": "no-reply@montepiedad.com.mx",
+                "asunto": "Verificación de correo electrónico",
+                "tipo": "EMAIl",
+                "plantilla": {
+                    "id": "60c8f31dbf80484ab8fcd190",
+                    "parametros": [
+                        "nombre"
+                    ]
+                }
+            },
+            "desafio": {
+                "generador": "/^[0-9]{5}$/i",
+                "numeroIntentos": 3,
+                "vigenciaIntento": 172800,
+                "validacionIntento": 3,
+                "reenvioIntento": 0,
+                "reestablecimientoIntentos": 172800
+            },
+            "origen": {
+                "unidadOrganizacional": "NMP",
+                "canal": "Kiosko"
+            }
+        }
+      
+## PUT /verificadores
+
+  PutVerifyBodyParam:
+    in: body
+    name: Verify
+    description: Permite crear un nuevo verificador
+    schema: 
+      $ref: "#/definitions/CreatedVerify"
+      example:
+        {
+            "id": "60c8e52a219166f4c9f028bb",
+            "nombre": "Verificador correo electrónico cliente",
+            "tipo": "EMAIl",
+            "mensaje": {
+                "remitente": "no-reply@montepiedad.com.mx",
+                "asunto": "Verificación de correo electrónico",
+                "tipo": "EMAIl",
+                "plantilla": {
+                    "id": "60c8f31dbf80484ab8fcd190",
+                    "parametros": [
+                        "nombre"
+                    ]
+                }
+            },
+            "desafio": {
+                "generador": "/^[0-9]{5}$/i",
+                "numeroIntentos": 3,
+                "vigenciaIntento": 172800,
+                "validacionIntento": 3,
+                "reenvioIntento": 0,
+                "reestablecimientoIntentos": 172800
+            },
+            "origen": {
+                "unidadOrganizacional": "NMP",
+                "canal": "Kiosko"
+            }
+        }
+
+## POST /verificador/desafio
+  CreatedChallengeBody:
+    in: body
+    name: Challenge
+    description: Permite crear un nuevo desafio
+    schema:
+      $ref: '#/definitions/CreatedChallenge'
+      example:
+        {
+            "destinatario": "5582575441",
+            "tipo": "PHONE",
+            "parametros": [
+                "clientId:ef4d53de-a090-489d-844c-7f1c473ef95f"
+            ]
+        }
+
+## POST /verificador/validar
+
+  ValidateChallengeBody:
+    in: body
+    name: Respuesta de desafío
+    description: Valida la respuesta de un desafío
+    schema:
+      $ref: '#/definitions/ValidateChallenge'
+      example:
+        {
+            "destinatario": "5582575441",
+            "tipo": "PHONE",
+            "parametros": [
+                "clientId:ef4d53de-a090-489d-844c-7f1c473ef95f"
+            ],
+            "codigo": "546849"
+        }
+  
+## POST /clientes/repep
+
+  CreatedSummaryREPEPBody:
+    in: body
+    name: Summary REPEP
+    schema:
+      $ref: '#/definitions/SummaryREPEP'
+
+## POST /clientes/repep/{period}/summary
+
+  CreatedREPEPPeriodBody:
+    in: body
+    name: document
+    description: Documento a cargar
+    schema:
+      $ref: "#/definitions/CreatedREPEPPeriod"
+
+## POST /clientes/repep/{period}/logbook
+
+  CreatedMarkLogbookREPEPBody:
+    in: body
+    name: Mark Logbook
+    schema:
+      $ref: '#/definitions/CreatedMarkLogbook'
+
+  CreatedSummaryREPEPPeriodBody:
+    in: body
+    name: Summary REPEP Period
+    schema:
+      $ref: '#/definitions/SummaryREPEPPeriod'
+
+## POST /clientes/reus
+
+  CreatedREUSBodyParam:
+    in: body
+    name: Nuevo Período REUS
+    schema:
+      $ref: '#/definitions/REUSPeriodDetail'
+
+## POST /clientes/reus/{period}/logbook
+
+  CreatedMarkLogbookREUSBody:
+    in: body
+    name: Mark Logbook 
+    schema:
+      $ref: '#/definitions/CreatedMarkLogbook'
+
+## POST /clientes/reus/{period}/summary
+  CreatedSummaryREUSPeriodBody:
+    in: body
+    name: Summary REUS Period
+    schema:
+      $ref: '#/definitions/SummaryREUSPeriod'
+
+## POST /clientes/{clientId}/telefonos/{phoneNumber}/reus
+  CreatedSummaryREUSBody:
+    in: body
+    name: Summary REUS
+    schema:
+      $ref: '#/definitions/SummaryREUS'
+
+paths:
+
+  /clientes/busqueda:
+    x-summary: /clientes/busqueda
+    parameters:
+      - $ref: '#/parameters/ChannelHeader'
+      - $ref: '#/parameters/UOHeader'
+      - $ref: '#/parameters/DataOriginHeader'
+      - $ref: '#/parameters/ProductHeader'
+    get:
+      tags:
+        - Clientes
+      operationId: getExistsClientsByFilterV1
+      summary: Búsqueda de cliente existente
+      security:
+        - OAuth2: [getExistsClientsByFilterV1]
+      description: >
+        Este recurso `GET`, nos permite identificar si existe uno o más clientes
+        similares. Sin exponer la información personal del cliente, prospecto u
+        oportunidad. Los criterios de búsqueda son:
+          * Tipo de Persona
+          * Nombre (s) 
+          * Apellido Paterno
+          * Apellido Materno
+          * CURP
+          * RFC
+          * Fecha de Nacimiento en formato `yyyy-mm-dd`
+          * Télefono
+          * Correo electrónico
+          * Razón Social
+          * Unidad Organizacional
+          * Canal
+          * Origen del Dato
+          * Producto
+      parameters:
+        - $ref: "#/parameters/UOQueryParam"
+        - $ref: "#/parameters/ChannelQueryParam"
+        - $ref: "#/parameters/ProductQueryParam"
+        - $ref: "#/parameters/DataOriginQueryParam"
+        - in: query
+          name: tipoPersona
+          description: Tipo de persona ha búscar (Fisica o Moral)
+          type: string
+          format: uuid
+        - in: query
+          name: nombre
+          description: Nombre (s) del individuo a búscar
+          type: string
+        - in: query
+          name: apellidoPaterno
+          description: Apellido paterno del individuo a búscar
+          type: string
+        - in: query
+          name: apellidoMaterno
+          description: Apellido materno del individuo a búscar
+          type: string
+        - in: query
+          name: fechaNacimiento
+          description: Fecha de Nacimiento
+          type: string
+          format: date
+        - in: query
+          name: curp
+          description: Calve Única de Registro de Población
+          type: string
+        - in: query
+          name: rfc
+          description: Registro Federal de Contribuyentes
+          type: string
+        - in: query
+          name: telefono
+          description: Número de teléfono
+          type: string
+        - in: query
+          name: correo
+          description: Correo electrónico
+          type: string
+      responses:
+        '200':
+          $ref: '#/responses/ResponseGetExistsClientsByFilterV1'
+        '400':
+          $ref: '#/responses/BadRequest'
+        '401':
+          $ref: '#/responses/Unauthorized'
+        '403':
+          $ref: '#/responses/Forbidden'
+        '404':
+          $ref: '#/responses/NotFound'
+        '500':
+          $ref: '#/responses/InternalServerError'
+
+  /clientes/{clientId}/reus:
+    x-summary: /clientes/{clientId}/reus
+    parameters:
+      - $ref: '#/parameters/ChannelHeader'
+      - $ref: '#/parameters/UOHeader'
+      - $ref: '#/parameters/DataOriginHeader'
+      - $ref: '#/parameters/ProductHeader'
+      - $ref: '#/parameters/ClientIdPath'
+    get:
+      tags:
+        - Clientes REUS
+      operationId: getREUSDetailByClientIdV1
+      summary: Paginación REUS de un Cliente.
+      description:  >
+        Puede realizar una petición de tipo GET a https://dev.montepiedad.com.mx/clientes/{clientId}/reus, 
+        para recuperar todos los teléfonos y correos electrónicos asociados a un cliente.
+        
+        Ordenamiento ascendente por fecha de creación:
+          
+          `https://nmp.com.mx/clientes/{clientId}/reus?sortOrder=ACS&sortBy=createdAt`
+          
+          Ordenamiento descendente por fecha de creación:
+          
+          `https://nmp.com.mx/clientes/{clientId}/reus?sortOrder=DESC&sortBy=createdAt`
+      parameters:
+        
+        - $ref: "#/parameters/WithPhonesQueryParam"
+        - $ref: "#/parameters/WithEmailsQueryParam"
+        
+        - $ref: "#/parameters/FromCreatedAtQueryParam"
+        - $ref: "#/parameters/ToCreatedAtQueryParam"
+        
+        - $ref: "#/parameters/SortOrderQueryParam"
+          
+      responses:
+        '200':
+          $ref: '#/responses/GetReusByClientIdResponseV1'
+        '400':
+          $ref: '#/responses/BadRequest'
+        '401':
+          $ref: '#/responses/Unauthorized'
+        '403':
+          $ref: '#/responses/Forbidden'
+        '404':
+          $ref: '#/responses/NotFound'
+        '500':
+          $ref: '#/responses/InternalServerError'
+
+  /clientes/{clientId}/reus/report:
+    x-summary: /clientes/{clientId}/reus/report
+    parameters:
+      - $ref: '#/parameters/ChannelHeader'
+      - $ref: '#/parameters/UOHeader'
+      - $ref: '#/parameters/DataOriginHeader'
+      - $ref: '#/parameters/ProductHeader'
+      - $ref: '#/parameters/ClientIdPath'
+    get:
+      tags:
+        - Clientes REUS
+      operationId: getPDFREUSByClientIdV1
+      summary: Reporte de Marcación REUS de un Cliente.
+      description: |
+        Genera el reporte en formato PDF de la Marcación REUS de un Cliente.
+      parameters:
+        - $ref: "#/parameters/WithPhonesQueryParam"
+        - $ref: "#/parameters/WithEmailsQueryParam"
+      produces:
+        - application/pdf
+      responses:
+        '200':
+          $ref: '#/responses/GetPDFReusByClientIdResponseV1'
+        '400':
+          $ref: '#/responses/BadRequest'
+        '401':
+          $ref: '#/responses/Unauthorized'
+        '403':
+          $ref: '#/responses/Forbidden'
+        '404':
+          $ref: '#/responses/NotFound'
+        '500':
+          $ref: '#/responses/InternalServerError'
+
+  /clientes/{clientId}/repep:
+    x-summary: /clientes/{clientId}/repep
+    parameters:
+      - $ref: '#/parameters/ChannelHeader'
+      - $ref: '#/parameters/UOHeader'
+      - $ref: '#/parameters/DataOriginHeader'
+      - $ref: '#/parameters/ProductHeader'
+      
+      - $ref: '#/parameters/ClientIdPath'
+    get:
+      tags:
+        - Clientes REPEP
+      operationId: getREPEPDetailByClientIdV1
+      summary: Paginación REPEP de un Cliente.
+      description: >
+        Puede realizar una petición de tipo GET a https://dev.montepiedad.com.mx/clientes/{clientId}/repep, 
+        para recuperar todos los teléfonos asociados aun cliente.
+        
+        Por defecto recuperará los primeros 20 elementos (máximo 30), algunos ejemplos:
+          
+          Ordenamiento ascendente por fecha de creación:
+          
+          `https://nmp.com.mx/clientes/{clientId}/repep?sortOrder=ACS&sortBy=createdAt`
+          
+          Ordenamiento descendente por fecha de creación:
+          
+          `https://nmp.com.mx/clientes/{clientId}/repep?sortOrder=DESC&sortBy=createdAt`
+      parameters:
+        
+        - $ref: "#/parameters/FromCreatedAtQueryParam"
+        - $ref: "#/parameters/ToCreatedAtQueryParam"
+        
+        - $ref: "#/parameters/OrderByQueryParam"
+        - $ref: "#/parameters/SortOrderQueryParam"
+        
+      responses:
+        '200':
+          $ref: '#/responses/GetREPEPByClientIdResponseV1'
+        '400':
+          $ref: '#/responses/BadRequest'
+        '401':
+          $ref: '#/responses/Unauthorized'
+        '403':
+          $ref: '#/responses/Forbidden'
+        '404':
+          $ref: '#/responses/NotFound'
+        '500':
+          $ref: '#/responses/InternalServerError'
+
+  /clientes/{clientId}/repep/report:
+    x-summary: /clientes/{clientId}/repep/report
+    parameters:
+      - $ref: '#/parameters/ChannelHeader'
+      - $ref: '#/parameters/UOHeader'
+      - $ref: '#/parameters/DataOriginHeader'
+      - $ref: '#/parameters/ProductHeader'
+      - $ref: '#/parameters/ClientIdPath'
+    get:
+      tags:
+        - Clientes REPEP
+      operationId: getPDFREPEPByClientIdV1
+      summary: Genera el reporte en formato PDF de la marcación REPEP de un cliente.
+      description: |
+          Genera el reporte en formato PDF de la marcación REPEP de un cliente.
+      produces:
+        - application/pdf
+      responses:
+        '200':
+          $ref: '#/responses/ResponseGetReportRepepByClientIdV1'
+        '400':
+          $ref: '#/responses/BadRequest'
+        '401':
+          $ref: '#/responses/Unauthorized'
+        '403':
+          $ref: '#/responses/Forbidden'
+        '404':
+          $ref: '#/responses/NotFound'
+        '500':
+          $ref: '#/responses/InternalServerError'
+
+  /clientes/{clientId}/telefonos/{phoneNumber}/repep:
+    x-summary: /clientes/{clientId}/telefonos/{phoneNumber}/repep
+    parameters:
+      - $ref: '#/parameters/ChannelHeader'
+      - $ref: '#/parameters/UOHeader'
+      - $ref: '#/parameters/DataOriginHeader'
+      - $ref: '#/parameters/ProductHeader'
+      - $ref: '#/parameters/ClientIdPath'
+      - $ref: '#/parameters/PhoneNumberPath'
+    get:
+      tags:
+        - Cliente Teléfonos
+      operationId: getREPEPByClientIdAndPhoneNumberV1
+      summary: >
+        Resumen de marcación REPEP.
+      description: |
+         Consulta la marcación REPEP de un cliente, por número de telefono.
+      responses:
+        '200':
+          $ref: '#/responses/ResponseGetRepepByClientIdAndPhoneNumberV1'
+        '400':
+          $ref: '#/responses/BadRequest'
+        '401':
+          $ref: '#/responses/Unauthorized'
+        '403':
+          $ref: '#/responses/Forbidden'
+        '404':
+          $ref: '#/responses/NotFound'
+        '500':
+          $ref: '#/responses/InternalServerError'
+    post:
+      tags:
+        - Cliente Teléfonos
+      operationId: postREPEPByClientIdAndPhoneNumberV1
+      summary:  Actualiza la marcación REPEP de un cliente, por número de telefono.
+      description: |
+         Actualiza la marcación REPEP de un cliente, por número de telefono.
+      parameters:
+        - $ref: '#/parameters/CreatedSummaryREPEPBody'
+      responses:
+        '201':
+          $ref: '#/responses/ResponsePostRepepByClientIdAndPhoneNumberV1'
+        '400':
+          $ref: '#/responses/BadRequest'
+        '401':
+          $ref: '#/responses/Unauthorized'
+        '403':
+          $ref: '#/responses/Forbidden'
+        '404':
+          $ref: '#/responses/NotFound'
+        '500':
+          $ref: '#/responses/InternalServerError'
+
+  /clientes/{clientId}/telefonos/{phoneNumber}/repep/report:
+    x-summary: /clientes/{clientId}/telefonos/{phoneNumber}/repep/report
+    parameters:
+      - $ref: '#/parameters/ChannelHeader'
+      - $ref: '#/parameters/UOHeader'
+      - $ref: '#/parameters/DataOriginHeader'
+      - $ref: '#/parameters/ProductHeader'
+      - $ref: '#/parameters/ClientIdPath'
+      - $ref: '#/parameters/PhoneNumberPath'
+    get:
+      tags:
+        - Cliente Teléfonos
+      operationId: getPDFREPEPByClientIdAndPhoneNumberV1
+      summary: Genera el reporte en formato PDF de la marcación REPEP de un cliente, por número de telefono.
+      description: |
+          Genera el reporte en formato PDF de la marcación REPEP de un cliente, por número de telefono.
+      produces:
+        - application/pdf
+      responses:
+        '200':
+          $ref: '#/responses/ResponseGetReportRepepByClientIdAndPhoneNumberV1'
+        '400':
+          $ref: '#/responses/BadRequest'
+        '401':
+          $ref: '#/responses/Unauthorized'
+        '403':
+          $ref: '#/responses/Forbidden'
+        '404':
+          $ref: '#/responses/NotFound'
+        '500':
+          $ref: '#/responses/InternalServerError'
+  
+  /clientes/{clientId}/telefonos/{phoneNumber}/reus:
+    x-summary: /clientes/{clientId}/telefonos/{phoneNumber}/reus
+    parameters:
+      - $ref: '#/parameters/ChannelHeader'
+      - $ref: '#/parameters/UOHeader'
+      - $ref: '#/parameters/DataOriginHeader'
+      - $ref: '#/parameters/ProductHeader'
+      - $ref: '#/parameters/ClientIdPath'
+      - $ref: '#/parameters/PhoneNumberPath'
+    get:
+      tags:
+        - Cliente Teléfonos
+      operationId: getREUSByClientIdAndPhoneNumberV1
+      summary: Consulta la marcación REUS de un cliente, por número de telefono.
+      description: |
+         Consulta la marcación REUS de un cliente, por número de telefono.
+      responses:
+        '200':
+          $ref: '#/responses/ResponseGetReusByClientIdAndPhoneNumberV1'
+        '400':
+          $ref: '#/responses/BadRequest'
+        '401':
+          $ref: '#/responses/Unauthorized'
+        '403':
+          $ref: '#/responses/Forbidden'
+        '404':
+          $ref: '#/responses/NotFound'
+        '500':
+          $ref: '#/responses/InternalServerError'
+    post:
+      tags:
+        - Cliente Teléfonos
+      operationId: postREUSByClientIdAndPhoneNumberV1
+      summary:  Actualiza la marcación REUS de un cliente, por número de telefono.
+      description: |
+         Actualiza la marcación REUS de un cliente, por número de telefono.
+      parameters:
+        - $ref: '#/parameters/CreatedSummaryREUSBody'
+      responses:
+        '201':
+          $ref: '#/responses/ResponsePostReusByClientIdAndPhoneNumberV1'
+        '400':
+          $ref: '#/responses/BadRequest'
+        '401':
+          $ref: '#/responses/Unauthorized'
+        '403':
+          $ref: '#/responses/Forbidden'
+        '404':
+          $ref: '#/responses/NotFound'
+        '500':
+          $ref: '#/responses/InternalServerError'
+          
+  /clientes/{clientId}/telefonos/{phoneNumber}/reus/report:
+    x-summary: /clientes/{clientId}/telefonos/{phoneNumber}/reus/report
+    parameters:
+      - $ref: '#/parameters/ChannelHeader'
+      - $ref: '#/parameters/UOHeader'
+      - $ref: '#/parameters/DataOriginHeader'
+      - $ref: '#/parameters/ProductHeader'
+      - $ref: '#/parameters/ClientIdPath'
+      - $ref: '#/parameters/PhoneNumberPath'
+    get:
+      tags:
+        - Cliente Teléfonos
+      operationId: getPdfREUSByClientIdAndPhoneNumberV1
+      summary: Reporte en marcación REUS por número de teléfono.
+      description: |
+         Reporte en marcación REUS por número de teléfono.
+      produces:
+        - application/pdf
+      responses:
+        '200':
+          $ref: '#/responses/ResponseGetPdfReusByClientIdAndPhoneNumberV1'
+        '400':
+          $ref: '#/responses/BadRequest'
+        '401':
+          $ref: '#/responses/Unauthorized'
+        '403':
+          $ref: '#/responses/Forbidden'
+        '404':
+          $ref: '#/responses/NotFound'
+        '500':
+          $ref: '#/responses/InternalServerError'
+  
+  /clientes/{clientId}/correos/{email}/reus:
+    x-summary: /clientes/{clientId}/correos/{email}/reus
+    parameters:
+      - $ref: '#/parameters/ChannelHeader'
+      - $ref: '#/parameters/UOHeader'
+      - $ref: '#/parameters/DataOriginHeader'
+      - $ref: '#/parameters/ProductHeader'
+      - $ref: '#/parameters/ClientIdPath'
+      - $ref: '#/parameters/EmailIdNumberPath'
+    get:
+      tags:
+        - Cliente Correos
+      operationId: getREUSByClientIdAndEmailNumberV1
+      summary: Consulta la marcación REUS de un cliente, por correo electrónico.
+      description: |
+         Consulta la marcación REUS de un cliente, por correo electrónico.
+      responses:
+        '200':
+          $ref: '#/responses/ResponseGetReusByClientIdAndEmailV1'
+        '400':
+          $ref: '#/responses/BadRequest'
+        '401':
+          $ref: '#/responses/Unauthorized'
+        '403':
+          $ref: '#/responses/Forbidden'
+        '404':
+          $ref: '#/responses/NotFound'
+        '500':
+          $ref: '#/responses/InternalServerError'
+    post:
+      tags:
+        - Cliente Correo
+      operationId: postREUSByClientIdAndEmailV1
+      summary:  Actualiza la marcación REUS de un cliente, por correo electrónico.
+      description: |
+         Actualiza la marcación REUS de un cliente, por correo electrónico.
+      parameters:
+        - $ref: '#/parameters/CreatedSummaryREUSBody'
+      responses:
+        '201':
+          $ref: '#/responses/ResponsePostReusByClientIdAndEmailV1'
+        '400':
+          $ref: '#/responses/BadRequest'
+        '401':
+          $ref: '#/responses/Unauthorized'
+        '403':
+          $ref: '#/responses/Forbidden'
+        '404':
+          $ref: '#/responses/NotFound'
+        '500':
+          $ref: '#/responses/InternalServerError'
+  
+  /clientes/{clientId}/correos/{email}/reus/report:
+    x-summary: /clientes/{clientId}/correos/{email}/reus/report
+    parameters:
+      - $ref: '#/parameters/ChannelHeader'
+      - $ref: '#/parameters/UOHeader'
+      - $ref: '#/parameters/DataOriginHeader'
+      - $ref: '#/parameters/ProductHeader'
+      - $ref: '#/parameters/ClientIdPath'
+      - $ref: '#/parameters/EmailIdNumberPath'
+    get:
+      tags:
+        - Cliente Correos
+      operationId: getPdfREUSByClientIdAndEmailV1
+      summary: Reporte en marcación REUS por correo electrónico.
+      description: |
+         Reporte en marcación REUS por correo electrónico.
+      produces:
+        - application/pdf
+      responses:
+        '200':
+          $ref: '#/responses/ResponseGetPdfReusByClientIdAndEmailV1'
+        '400':
+          $ref: '#/responses/BadRequest'
+        '401':
+          $ref: '#/responses/Unauthorized'
+        '403':
+          $ref: '#/responses/Forbidden'
+        '404':
+          $ref: '#/responses/NotFound'
+        '500':
+          $ref: '#/responses/InternalServerError'
+    
+  /clientes/repep:
+    x-summary: /clientes/repep
+    parameters:
+      - $ref: '#/parameters/ChannelHeader'
+      - $ref: '#/parameters/UOHeader'
+      - $ref: '#/parameters/DataOriginHeader'
+      - $ref: '#/parameters/ProductHeader'
+    get:
+      tags:
+        - REPEP
+      operationId: getPaginationOfREPEPV1
+      summary: Paginación de Marcación REPEP.
+      description: >
+        Puede realizar una petición de tipo GET a https://dev.montepiedad.com.mx/clientes/repep, 
+        para recuperar todas los periodos REPEP ejecutados.
+        
+        Por defecto recuperará los primeros 20 elementos (máximo 30), algunos ejemplos:
+          
+          Primeros 30 elementos:
+          `https://nmp.com.mx/clientes/repep?pageNumber=0&pageSize=30`
+          
+          Siguientes 30 elementos:
+          `https://nmp.com.mx/clientes/repep?pageNumber=1&pageSize=30`
+          
+          Últimos 20 elementos:
+          `https://nmp.com.mx/clientes/repep?pageNumber=2&pageSize=30`
+          
+          Ordenamiento ascendente por fecha de creación:
+          
+          `https://nmp.com.mx/clientes/repep?sortOrder=ACS&sortBy=createdAt`
+          
+          Ordenamiento descendente por fecha de creación:
+          
+          `https://nmp.com.mx/clientes/repep?sortOrder=DESC&sortBy=createdAt`
+      parameters:
+        
+        - $ref: "#/parameters/FromPeriodQueryParam"
+        - $ref: "#/parameters/ToPeriodQueryParam"
+        
+        - $ref: "#/parameters/FromCreatedAtQueryParam"
+        - $ref: "#/parameters/ToCreatedAtQueryParam"
+        
+        - $ref: "#/parameters/OrderByQueryParam"
+        - $ref: "#/parameters/SortOrderQueryParam"
+        
+        - $ref: "#/parameters/PageNumberQueryParam"
+        - $ref: "#/parameters/PageSizeQueryParam"
+        
+      security:
+        - OAuth2: [getPaginationOfREPEPV1]
+      responses:
+        '200':
+          $ref: '#/responses/GetPaginationREPEPResponseV1'
+        '400':
+          $ref: '#/responses/BadRequest'
+        '401':
+          $ref: '#/responses/Unauthorized'
+        '403':
+          $ref: '#/responses/Forbidden'
+        '404':
+          $ref: '#/responses/NotFound'
+        '500':
+          $ref: '#/responses/InternalServerError'
+    post:
+      tags:
+        - REPEP
+      operationId: postCreatedREPEPV1
+      summary: Creación de Período REPEP.
+      description: |
+        Esta operación permite crear un nuevo período de marcación REPEP
+      security:
+        - OAuth2: [postCreatedREPEPV1]
+      parameters:
+        - $ref: '#/parameters/CreatedREPEPPeriodBody'
+      responses:
+        '201':
+          $ref: '#/responses/PostCreatedREPEPPerioResponseV1'
+        '400':
+          $ref: '#/responses/BadRequest'
+        '401':
+          $ref: '#/responses/Unauthorized'
+        '403':
+          $ref: '#/responses/Forbidden'
+        '404':
+          $ref: '#/responses/NotFound'
+        '500':
+          $ref: '#/responses/InternalServerError'
+          
+  /clientes/repep/{period}:
+    x-summary: /clientes/repep/{period}
+    parameters:
+      - $ref: '#/parameters/ChannelHeader'
+      - $ref: '#/parameters/UOHeader'
+      - $ref: '#/parameters/DataOriginHeader'
+      - $ref: '#/parameters/PeriodPath'
+    get:
+      tags:
+        - REPEP
+      operationId: getREPEPDetailByPeriodV1
+      summary: Detalle de Operación REPEP.
+      description: |
+        Recupera el detalle de una operación REPEP por periodo
+      responses:
+        '200':
+          $ref: '#/responses/GetREPEPPeriodDetailByPeriodResponseV1'
+        '400':
+          $ref: '#/responses/BadRequest'
+        '401':
+          $ref: '#/responses/Unauthorized'
+        '403':
+          $ref: '#/responses/Forbidden'
+        '404':
+          $ref: '#/responses/NotFound'
+        '500':
+          $ref: '#/responses/InternalServerError'
+
+  /clientes/repep/{period}/logbook:
+    x-summary: /clientes/repep/{period}/logbook
+    parameters:
+      - $ref: '#/parameters/ChannelHeader'
+      - $ref: '#/parameters/UOHeader'
+      - $ref: '#/parameters/DataOriginHeader'
+      - $ref: '#/parameters/PeriodPath'
+    post:
+      tags:
+        - REPEP
+      summary: Añade información a la bitacora de operación REPEP
+      description: |
+        Añade información a la bitacora de operación REPEP
+      parameters:
+        - $ref: '#/parameters/CreatedMarkLogbookREPEPBody'
+      responses:
+        '204':
+          $ref: '#/responses/NoContent'
+        '400':
+          $ref: '#/responses/BadRequest'
+        '401':
+          $ref: '#/responses/Unauthorized'
+        '403':
+          $ref: '#/responses/Forbidden'
+        '404':
+          $ref: '#/responses/NotFound'
+        '500':
+          $ref: '#/responses/InternalServerError'
+
+  /clientes/repep/{period}/summary:
+    x-summary: /clientes/repep/{period}/summary
+    parameters:
+      - $ref: '#/parameters/ChannelHeader'
+      - $ref: '#/parameters/UOHeader'
+      - $ref: '#/parameters/DataOriginHeader'
+      - $ref: '#/parameters/PeriodPath'
+    post:
+      tags:
+        - REPEP
+      summary: Actualiza el Resumen de Período REPEP
+      description: |
+        Actualiza el Resumen de Período REPEP
+      parameters:
+        - $ref: '#/parameters/CreatedSummaryREPEPPeriodBody'
+      responses:
+        '204':
+          $ref: '#/responses/NoContent'
+        '400':
+          $ref: '#/responses/BadRequest'
+        '401':
+          $ref: '#/responses/Unauthorized'
+        '403':
+          $ref: '#/responses/Forbidden'
+        '404':
+          $ref: '#/responses/NotFound'
+        '500':
+          $ref: '#/responses/InternalServerError'
+
+  /clientes/report/repep:
+    x-summary: /clientes/report/repep
+    parameters:
+      - $ref: '#/parameters/ChannelHeader'
+      - $ref: '#/parameters/UOHeader'
+      - $ref: '#/parameters/DataOriginHeader'
+      - $ref: '#/parameters/ProductHeader'
+    get:
+      tags:
+        - Reporte REPEP
+      operationId: getPdfPaginationOfREPEV1
+      summary: Geración de Historico de Marcación REPEP.
+      description: >
+        Puede realizar una petición de tipo GET a https://dev.montepiedad.com.mx/clientes/repep/report, 
+        para recuperar todas los periodos REPEP ejecutados en un Reporte PDF.
+        
+        > Ordenamiento ascendente por fecha de creación:
+          
+          `https://nmp.com.mx/clientes/repep/report?sortOrder=ACS&sortBy=createdAt`
+          
+        > Ordenamiento descendente por fecha de creación:
+          
+          `https://nmp.com.mx/clientes/repep/report?sortOrder=DESC&sortBy=createdAt`
+      parameters:
+        - $ref: "#/parameters/FromPeriodQueryParam"
+        - $ref: "#/parameters/ToPeriodQueryParam"
+        
+        - $ref: "#/parameters/FromCreatedAtQueryParam"
+        - $ref: "#/parameters/ToCreatedAtQueryParam"
+        
+        - $ref: "#/parameters/OrderByQueryParam"
+        - $ref: "#/parameters/SortOrderQueryParam"
+      security:
+        - OAuth2: [getPaginationOfREPEPV1]
+      produces:
+        - application/pdf
+      responses:
+        '200':
+          $ref: '#/responses/GetPdfPaginationREPEPResponseV1'
+        '400':
+          $ref: '#/responses/BadRequest'
+        '401':
+          $ref: '#/responses/Unauthorized'
+        '403':
+          $ref: '#/responses/Forbidden'
+        '404':
+          $ref: '#/responses/NotFound'
+        '500':
+          $ref: '#/responses/InternalServerError'
+
+  /clientes/report/repep/{period}:
+    x-summary: /clientes/report/repep/{period}
+    parameters:
+      - $ref: '#/parameters/ChannelHeader'
+      - $ref: '#/parameters/UOHeader'
+      - $ref: '#/parameters/DataOriginHeader'
+      - $ref: '#/parameters/PeriodPath'
+    get:
+      tags:
+        - Reporte REPEP
+      operationId: getPdfREPEPDetailByPeriodV1
+      summary: Genera Reporte de Período REPEP
+      description: |
+        Genera Reporte de Período REPEP en formato PDF
+      produces:
+        - application/pdf
+      responses:
+        '200':
+          $ref: '#/responses/GetReportREPEPDetailByPeriodResponseV1'
+        '400':
+          $ref: '#/responses/BadRequest'
+        '401':
+          $ref: '#/responses/Unauthorized'
+        '403':
+          $ref: '#/responses/Forbidden'
+        '404':
+          $ref: '#/responses/NotFound'
+        '500':
+          $ref: '#/responses/InternalServerError'
+          
+  /clientes/reus:
+    x-summary: /clientes/reus
+    parameters:
+      - $ref: '#/parameters/ChannelHeader'
+      - $ref: '#/parameters/UOHeader'
+      - $ref: '#/parameters/DataOriginHeader'
+      - $ref: '#/parameters/ProductHeader'
+    get:
+      tags:
+        - REUS
+      operationId: getPaginationREUSV1
+      summary: Paginación de Marcación REUS.
+      description: >
+        Puede realizar una petición de tipo GET a https://dev.montepiedad.com.mx/clientes/reus, 
+        para recuperar todas los periodos REUS ejecutados.
+        
+        Por defecto recuperará los primeros 20 elementos (máximo 30), algunos ejemplos:
+          
+          Primeros 30 elementos:
+          `https://nmp.com.mx/clientes/reus?pageNumber=0&pageSize=30`
+          
+          Siguientes 30 elementos:
+          `https://nmp.com.mx/clientes/reus?pageNumber=1&pageSize=30`
+          
+          Últimos 20 elementos:
+          `https://nmp.com.mx/clientes/reus?pageNumber=2&pageSize=30`
+      parameters:
+        
+        - $ref: "#/parameters/MarkREUSTypeQueryParam"
+        
+        - $ref: "#/parameters/FromPeriodQueryParam"
+        - $ref: "#/parameters/ToPeriodQueryParam"
+        
+        - $ref: "#/parameters/FromCreatedAtQueryParam"
+        - $ref: "#/parameters/ToCreatedAtQueryParam"
+        
+        - $ref: "#/parameters/OrderByQueryParam"
+        - $ref: "#/parameters/SortOrderQueryParam"
+        
+        - $ref: "#/parameters/PageNumberQueryParam"
+        - $ref: "#/parameters/PageSizeQueryParam"
+        
+        
+      responses:
+        '200':
+          $ref: '#/responses/GetPaginationREUSResponseV1'
+        '400':
+          $ref: '#/responses/BadRequest'
+        '401':
+          $ref: '#/responses/Unauthorized'
+        '403':
+          $ref: '#/responses/Forbidden'
+        '404':
+          $ref: '#/responses/NotFound'
+        '500':
+          $ref: '#/responses/InternalServerError'
+    post:
+      tags:
+        - REUS
+      operationId: porCreatedREUSV1
+      summary: Creación de nuevo Período REUS
+      description: >
+        El siguiente recurso `POST` permite registrar un nuevo período de marcación REUS
+      parameters:
+        - $ref: "#/parameters/CreatedREUSBodyParam"
+      responses:
+        '201':
+          $ref: '#/responses/PostCreatedREUSPerioResponseV1'
+        '400':
+          $ref: '#/responses/BadRequest'
+        '401':
+          $ref: '#/responses/Unauthorized'
+        '403':
+          $ref: '#/responses/Forbidden'
+        '404':
+          $ref: '#/responses/NotFound'
+        '500':
+          $ref: '#/responses/InternalServerError'
+  
+  /clientes/reus/{period}:
+    x-summary: /clientes/reus/{period}
+    parameters:
+      - $ref: '#/parameters/ChannelHeader'
+      - $ref: '#/parameters/UOHeader'
+      - $ref: '#/parameters/DataOriginHeader'
+      - $ref: '#/parameters/PeriodPath'
+    get:
+      tags:
+        - REUS
+      operationId: getREUSDetailByPeriodV1
+      summary: Detalle de Operación REUS.
+      description: |
+        Recupera el detalle de una operación REUS por periodo
+      responses:
+        '200':
+          $ref: '#/responses/GetREUSDetailByPeriodResponseV1'
+        '400':
+          $ref: '#/responses/BadRequest'
+        '401':
+          $ref: '#/responses/Unauthorized'
+        '403':
+          $ref: '#/responses/Forbidden'
+        '404':
+          $ref: '#/responses/NotFound'
+        '500':
+          $ref: '#/responses/InternalServerError'
+
+  /clientes/reus/{period}/logbook:
+    x-summary: /clientes/reus/{period}/logbook
+    parameters:
+      - $ref: '#/parameters/ChannelHeader'
+      - $ref: '#/parameters/UOHeader'
+      - $ref: '#/parameters/DataOriginHeader'
+      - $ref: '#/parameters/PeriodPath'
+    post:
+      tags:
+        - REUS
+      summary: Añade información a la bitacora de operación REUS
+      description: |
+        Añade información a la bitacora de operación REUS
+      parameters:
+        - $ref: '#/parameters/CreatedMarkLogbookREUSBody'
+      responses:
+        '204':
+          $ref: '#/responses/NoContent'
+        '400':
+          $ref: '#/responses/BadRequest'
+        '401':
+          $ref: '#/responses/Unauthorized'
+        '403':
+          $ref: '#/responses/Forbidden'
+        '404':
+          $ref: '#/responses/NotFound'
+        '500':
+          $ref: '#/responses/InternalServerError'
+
+  /clientes/reus/{period}/summary:
+    x-summary: /clientes/reus/{period}/summary
+    parameters:
+      - $ref: '#/parameters/ChannelHeader'
+      - $ref: '#/parameters/UOHeader'
+      - $ref: '#/parameters/DataOriginHeader'
+      - $ref: '#/parameters/PeriodPath'
+    post:
+      tags:
+        - REUS
+      summary: Actualiza el Resumen de Período REUS
+      description: |
+        Actualiza el Resumen de Período REUS
+      parameters:
+        - $ref: '#/parameters/CreatedSummaryREUSPeriodBody'
+      responses:
+        '204':
+          $ref: '#/responses/NoContent'
+        '400':
+          $ref: '#/responses/BadRequest'
+        '401':
+          $ref: '#/responses/Unauthorized'
+        '403':
+          $ref: '#/responses/Forbidden'
+        '404':
+          $ref: '#/responses/NotFound'
+        '500':
+          $ref: '#/responses/InternalServerError'
+
+  /clientes/report/reus:
+    x-summary: /clientes/report/reus
+    parameters:
+      - $ref: '#/parameters/ChannelHeader'
+      - $ref: '#/parameters/UOHeader'
+      - $ref: '#/parameters/DataOriginHeader'
+      - $ref: '#/parameters/ProductHeader'
+    get:
+      tags:
+        - Reporte REUS
+      operationId: getReportPaginationREUSV1
+      summary: Reporte de periodos de Marcación REUS.
+      description: >
+        Puede realizar una petición de tipo GET a https://dev.montepiedad.com.mx/clientes/repep, 
+        para recuperar un reporte de periodos REUS ejecutados.
+      parameters:
+      
+        - $ref: "#/parameters/MarkREUSTypeQueryParam"
+      
+        - $ref: "#/parameters/FromPeriodQueryParam"
+        - $ref: "#/parameters/ToPeriodQueryParam"
+        
+        - $ref: "#/parameters/FromCreatedAtQueryParam"
+        - $ref: "#/parameters/ToCreatedAtQueryParam"
+        
+        - $ref: "#/parameters/OrderByQueryParam"
+        - $ref: "#/parameters/SortOrderQueryParam"
+        
+      produces:
+        - application/pdf
+      responses:
+        '200':
+          $ref: '#/responses/GetReportPaginationREUSPeriodResponseV1'
+        '400':
+          $ref: '#/responses/BadRequest'
+        '401':
+          $ref: '#/responses/Unauthorized'
+        '403':
+          $ref: '#/responses/Forbidden'
+        '404':
+          $ref: '#/responses/NotFound'
+        '500':
+          $ref: '#/responses/InternalServerError'
+
+  /clientes/report/reus/{period}:
+    x-summary: /clientes/report/reus/{period}
+    parameters:
+      - $ref: '#/parameters/ChannelHeader'
+      - $ref: '#/parameters/UOHeader'
+      - $ref: '#/parameters/DataOriginHeader'
+      - $ref: '#/parameters/PeriodPath'
+    get:
+      tags:
+        - Reporte REUS
+      operationId: getPdfREUSDetailByPeriodV1
+      summary: Genera Reporte de Período REUS
+      description: |
+        Genera Reporte de Período REUS
+      produces:
+        - application/pdf
+        
+      parameters:
+        - $ref: "#/parameters/MarkREUSTypeQueryParam"
+      responses:
+        '200':
+          $ref: '#/responses/GetPDFREUSDetailByPeriodResponseV1'
+        '400':
+          $ref: '#/responses/BadRequest'
+        '401':
+          $ref: '#/responses/Unauthorized'
+        '403':
+          $ref: '#/responses/Forbidden'
+        '404':
+          $ref: '#/responses/NotFound'
+        '500':
+          $ref: '#/responses/InternalServerError'
+  
+  /pre-registros:
+    x-summary: /pre-registros
+    parameters:
+      - $ref: "#/parameters/UOHeader"
+      - $ref: "#/parameters/ChannelHeader"
+      - $ref: "#/parameters/ProductHeader"
+      - $ref: "#/parameters/DataOriginHeader"
+    get:
+      tags: 
+        - Pre-Registro
+      operationId: getPaginationOfPreRegisterV1
+      summary: Paginación de pre-registros
+      description:  > 
+        
+      parameters:
+        - $ref: "#/parameters/OrderByQueryParam"
+        - $ref: "#/parameters/SortOrderQueryParam"
+        - $ref: "#/parameters/PageNumberQueryParam"
+        - $ref: "#/parameters/PageSizeQueryParam"
+      responses:
+        "200":
+          $ref: "#/responses/GetPaginationOfVerifyResponseV1"
+        "400":
+          $ref: "#/responses/BadRequest"
+        "401":
+          $ref: "#/responses/Unauthorized"
+        "403":
+          $ref: "#/responses/Forbidden"
+        "404":
+          $ref: "#/responses/NotFound"
+        "500":
+          $ref: "#/responses/InternalServerError"
+  
+  /verificadores:
+    x-summary: /verificadores
+    parameters:
+      - $ref: "#/parameters/UOHeader"
+      - $ref: "#/parameters/ChannelHeader"
+      - $ref: "#/parameters/ProductHeader"
+      - $ref: "#/parameters/DataOriginHeader"
+    get:
+      tags: 
+        - Verificador
+      operationId: getPaginationOfVerificadorV1
+      summary: Paginación de verificadores
+      description:  > 
+        
+      parameters:
+        - $ref: "#/parameters/OrderByQueryParam"
+        - $ref: "#/parameters/SortOrderQueryParam"
+        - $ref: "#/parameters/PageNumberQueryParam"
+        - $ref: "#/parameters/PageSizeQueryParam"
+      responses:
+        "200":
+          $ref: "#/responses/GetPaginationOfVerifyResponseV1"
+        "400":
+          $ref: "#/responses/BadRequest"
+        "401":
+          $ref: "#/responses/Unauthorized"
+        "403":
+          $ref: "#/responses/Forbidden"
+        "404":
+          $ref: "#/responses/NotFound"
+        "500":
+          $ref: "#/responses/InternalServerError"
+    post:
+      tags: 
+        - Verificador
+      operationId: postCreatedVerifyV1
+      summary: Creación de verificador
+      description:  > 
+        El siguiente recurso `POST` permite crear un nuevo verificador. 
+      parameters:
+        - $ref: "#/parameters/CreatedVerifyBodyParam"
+      responses:
+        "201":
+          $ref: "#/responses/CreatedVerifyResponseV1"
+        "400":
+          $ref: "#/responses/BadRequest"
+        "401":
+          $ref: "#/responses/Unauthorized"
+        "403":
+          $ref: "#/responses/Forbidden"
+        "404":
+          $ref: "#/responses/NotFound"
+        "500":
+          $ref: "#/responses/InternalServerError"
+  
+  /verificadores/{verifyId}:
+    x-summary: /verificadores/{verifyId}
+    parameters:
+      - $ref: "#/parameters/UOHeader"
+      - $ref: "#/parameters/ChannelHeader"
+      - $ref: "#/parameters/ProductHeader"
+      - $ref: "#/parameters/DataOriginHeader"
+      - $ref: "#/parameters/VerifyIdPath"
+    get:
+      tags: 
+        - Verificador
+      operationId: getVerifyDetailByIdV1
+      summary: Detalle de Documento
+      description:  > 
+        El siguiente recurso `GET` permite obtener el detalle de un documento 
+        por su identificador único de documento. 
+      responses:
+        "200":
+          $ref: "#/responses/GetVerifyDetailByIdResponseV1"
+        "400":
+          $ref: "#/responses/BadRequest"
+        "401":
+          $ref: "#/responses/Unauthorized"
+        "403":
+          $ref: "#/responses/Forbidden"
+        "404":
+          $ref: "#/responses/NotFound"
+        "500":
+          $ref: "#/responses/InternalServerError"
+    put:
+      tags: 
+        - Verificador
+      operationId: PutVerificadorDetailByIdV1
+      summary: Actualización de Documento
+      description:  > 
+        El siguiente recurso `PUT` permite un documento 
+        por su identificador único de documento. 
+      parameters:
+        - $ref: "#/parameters/PutVerifyBodyParam"
+      responses:
+        "200":
+          $ref: "#/responses/PutVerifyDetailByIdResponseV1"
+        "400":
+          $ref: "#/responses/BadRequest"
+        "401":
+          $ref: "#/responses/Unauthorized"
+        "403":
+          $ref: "#/responses/Forbidden"
+        "404":
+          $ref: "#/responses/NotFound"
+        "500":
+          $ref: "#/responses/InternalServerError"
+    delete:
+      tags: 
+        - Verificador
+      operationId: DeleteVerificadorDetailByIdV1
+      summary: Eliminación de Documento
+      description:  > 
+        El siguiente recurso `DELETE` permite eliminar un documento existente 
+        en el gestor documental por su identificador único de documento. 
+      responses:
+        "201":
+          $ref: "#/responses/NoContent"
+        "400":
+          $ref: "#/responses/BadRequest"
+        "401":
+          $ref: "#/responses/Unauthorized"
+        "403":
+          $ref: "#/responses/Forbidden"
+        "404":
+          $ref: "#/responses/NotFound"
+        "500":
+          $ref: "#/responses/InternalServerError"
+          
+  /verificadores/desafio:
+    x-summary: /verificadores/desafio
+    parameters:
+      - $ref: '#/parameters/ChannelHeader'
+      - $ref: '#/parameters/UOHeader'
+      - $ref: '#/parameters/DataOriginHeader'
+      - $ref: '#/parameters/ProductHeader'
+    post:
+      tags:
+        - Verificador
+      operationId: postChallengeV1
+      summary: >-
+        Genera una verificación de segundo factor de atentificación por correo
+        electrónico o SMS.
+      description: >
+        Este recurso `POST` generar un desafío de segundo factor de
+        autentificación correo electrónico o SMS,  dependiendo de los siguientes
+        atributos:
+         - Unidad Organizacional
+         - Canal
+         - Producto
+         - Origen del Dato
+      parameters:
+        - $ref: '#/parameters/CreatedChallengeBody'
+      responses:
+        '204':
+          $ref: '#/responses/NoContent'
+        '400':
+          $ref: '#/responses/BadRequest'
+        '401':
+          $ref: '#/responses/Unauthorized'
+        '403':
+          $ref: '#/responses/Forbidden'
+        '404':
+          $ref: '#/responses/NotFound'
+        '500':
+          $ref: '#/responses/InternalServerError'
+  
+  /verificadores/reenvio:
+    x-summary: /verificadores/reenvio
+    parameters:
+      - $ref: '#/parameters/ChannelHeader'
+      - $ref: '#/parameters/UOHeader'
+      - $ref: '#/parameters/DataOriginHeader'
+      - $ref: '#/parameters/ProductHeader'
+    post:
+      tags:
+        - Verificador
+      operationId: postForwardingV1
+      summary: >-
+        Reenvía una verificación de segundo factor de atentificación por correo
+        electrónico o SMS existente.
+      description: >
+        Este recurso `POST` reenvía una verificación un desafio de segundo
+        factor de autentificación por correo electrónico o SMS,  dependiendo de
+        los siguientes atributos:
+         - Unidad Organizacional
+         - Canal
+         - Producto
+         - Origen del Dato
+      parameters:
+        - $ref: '#/parameters/CreatedChallengeBody'
+      responses:
+        '204':
+          $ref: '#/responses/NoContent'
+        '400':
+          $ref: '#/responses/BadRequest'
+        '401':
+          $ref: '#/responses/Unauthorized'
+        '403':
+          $ref: '#/responses/Forbidden'
+        '404':
+          $ref: '#/responses/NotFound'
+        '500':
+          $ref: '#/responses/InternalServerError'
+  
+  /verificadores/validar:
+    x-summary: /verificadores/validar
+    parameters:
+      - $ref: '#/parameters/ChannelHeader'
+      - $ref: '#/parameters/UOHeader'
+      - $ref: '#/parameters/DataOriginHeader'
+      - $ref: '#/parameters/ProductHeader'
+    post:
+      tags:
+        - Verificador
+      operationId: postValidateV1
+      summary: >-
+        Verifica una respuesta de segundo factor de atentificación por correo
+        electrónico o SMS.
+      description: >
+        Este recurso `POST` verifica una respuesta de segundo factor de
+        atentificación por correo electrónico o SMS
+      parameters:
+        - $ref: '#/parameters/ValidateChallengeBody'
+      responses:
+        '200':
+          $ref: '#/responses/ResponsePOSTValidateV1'
+        '400':
+          $ref: '#/responses/BadRequest'
+        '401':
+          $ref: '#/responses/Unauthorized'
+        '403':
+          $ref: '#/responses/Forbidden'
+        '404':
+          $ref: '#/responses/NotFound'
+        '500':
+          $ref: '#/responses/InternalServerError'
