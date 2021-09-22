@@ -1,7 +1,7 @@
 swagger: "2.0"
 info:
   version: 1.0.1
-  title: "API Clientes v1"
+  title: "API Clientes"
   description: API Gestión de Clientes
   termsOfService: "https://www.royalresorts.com/terms"
   contact:
