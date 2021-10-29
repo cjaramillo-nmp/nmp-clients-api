@@ -11,8 +11,8 @@ info:
     name: MIT
     url: https://github.com/apiaryio/polls-api/blob/master/LICENSE
 
-host: "nmp.com.mx"
-basePath: "/v1"
+host: "api.nmp.com.mx"
+basePath: "/clients/v1"
 
 schemes:
   - https
@@ -1402,9 +1402,240 @@ definitions:
 
 ## REUS
 
-  SummaryREUSPeriod:
-    title: Resumen de Período REPEP
+  ReusMark:
+    title: Detalle de Marcación
     type: object
+    required:
+      - total
+      - new
+      - noModifications
+      - unmarked
+    properties: 
+      total:
+        type: number
+        description: > 
+          Total de elementos marcados en el período
+      new:
+        type: number
+        description: > 
+          Total de nuevos elementos marcados en el período
+      noModifications:
+        type: number
+        description: >
+          Total de elementos sin modificaciones en el período
+      unmarked:
+        type: number
+        description: >
+          Total de elementos desmarcados en el período 
+
+  ReusFilterCRMPerson:
+    title: Filtro de Personas en CRM
+    type: object
+    required:
+      - total
+      - search
+      - discarded
+    properties:
+      total:
+        type: number
+        description: >
+          Total de personas obtenidas al agrupar lo registros del archivo Vigentes REUS por las columnas:
+            - nombres
+            - paterno
+            - materno
+            - rfc (opcional)
+      search: 
+        type: number
+        description: >
+          Total de personas encontradas en CRM por las columnas:
+           - nombres
+           - paterno
+           - materno
+           - rfc (opcional)
+          
+          Con origen NMP exceptuando FMP.
+      discarded:
+        type: number
+        description: >
+          Total de personas no encontradas en CRM ya sea por no existir o por ser origen FMP.
+
+  ReusFilterCRMPhone:
+    title: Filtro de Teléfonos en CRM
+    type: object
+    required:
+      - total
+      - search
+      - marked
+    properties:
+      total:
+        type: number
+        description: >
+          Total de teléfonos correspondintes únicamente a las personas (clientes) encontradas en CRM.
+      search: 
+        type: number
+        description: >
+          Total de teléfonos encontrados en CRM por persona (cliente) dentro de su expedinete. 
+      marked:
+        $ref: "#/definitions/ReusMark"
+    
+  ReusFilterCRMEmail:
+    title: Filtro de Correos Electrónicos en CRM
+    type: object
+    required:
+      - total
+      - search
+      - marked
+    properties:
+      total:
+        type: number
+        description: >
+          Total de correos electrónicos correspondintes únicamente a las personas (clientes) encontradas en CRM.
+      search: 
+        type: number
+        description: >
+          Total de correos electrónicos encontrados en CRM por persona (cliente) dentro de su expedinete.
+      marked:
+        $ref: "#/definitions/ReusMark"
+
+  ReusFilterCRM:
+    title: Filtro CRM REUS
+    type: object
+    required:
+      - persons
+      - phones
+      - emails
+    properties:
+      persons:
+        $ref: "#/definitions/ReusFilterCRMPerson"
+      phones:
+        $ref: "#/definitions/ReusFilterCRMPhone"
+      emails:
+        $ref: "#/definitions/ReusFilterCRMEmail"
+
+  ReusFilterSAPPerson:
+    title: Filtro de Personas en SAP
+    type: object
+    required:
+      - total
+      - search
+      - discarded
+    properties:
+      total:
+        type: number
+        description: >
+          Total de personas obtenidas al agrupar lo registros del archivo Vigentes REUS por las columnas:
+            - nombres
+            - paterno
+            - materno
+            - rfc (opcional)
+      search: 
+        type: number
+        description: >
+          Total de personas encontradas en CRM y con origen FMP (La PAZ) por las columnas:
+           - nombres
+           - paterno
+           - materno
+           - rfc (opcional)
+          
+          Con origen FMP exceptuando NMP.
+      discarded:
+        type: number
+        description: >
+          Total de personas no encontradas en CRM ya sea por no existir o por ser origen NMP.
+
+  ReusFilterSAPPhone:
+    title: Filtro de Teléfonos en SAP
+    type: object
+    required:
+      - total
+      - search
+      - marked
+    properties:
+      total:
+        type: number
+        description: >
+          Total de teléfonos correspondintes únicamente a las personas (clientes) encontradas en CRM y con origen FMP (LA PAZ).
+      search: 
+        type: number
+        description: >
+          Total de teléfonos encontrados en CRM por persona (cliente) dentro de su expedinete y con origen FMP (LA PAZ). 
+      marked:
+        $ref: "#/definitions/ReusMark"
+    
+  ReusFilterSAPEmail:
+    title: Filtro de Correos Electrónicos en SAP
+    type: object
+    required:
+      - total
+      - search
+      - marked
+    properties:
+      total:
+        type: number
+        description: >
+          Total de correos electrónicos correspondintes únicamente a las personas (clientes) encontradas en CRM y con origen FMP (LA PAZ).
+      search: 
+        type: number
+        description: >
+          Total de correos electrónicos encontrados en CRM por persona (cliente) dentro de su expedinete y con origen FMP (LA PAZ).
+      marked:
+        $ref: "#/definitions/ReusMark"
+
+  ReusFilterSAP:
+    title: Filtro CRM SAP
+    type: object
+    properties:
+      persons:
+        $ref: "#/definitions/ReusFilterSAPPerson"
+      phones:
+        $ref: "#/definitions/ReusFilterSAPPhone"
+      emails:
+        $ref: "#/definitions/ReusFilterSAPEmail"
+
+  ReusSummaryFilter:
+    title: Filtro de resumen REUS
+    type: object
+    required:
+      - crm
+      - sap
+    properties:
+      crm:
+        $ref: "#/definitions/ReusFilterCRM"
+      sap:
+        $ref: "#/definitions/ReusFilterSAP"
+
+  ReusSummaryPeriod:
+    title: Resumen de Período REUS
+    type: object
+    properties:
+      total:
+        type: number
+        description: >
+          Número total de registros en el archivo Vigentes REUS
+      persons:
+        type: number
+        description: >
+          Número total de personas registradas en el arvohivo Vigentes REUS, obtenido al realizar una agrupación de los registros originales por las columnas:
+            - nombres
+            - paterno
+            - materno
+            - rfc (opcional)
+      phones:
+        type: number
+        description: >
+          Número total de telefonos en el archivo Vigentes REUS de las columnas: 
+           - telefono_fijo
+           - telefono_fijo2  
+           - telefono_movil  
+           - telefono_movil2
+      emails:
+        type: number
+        description: >
+          Número total de correos electrónicos en el archivo Vigentes REUS de las columnas:
+           - correo_particular  
+           - correo_oficina
+      filters:
+        $ref: "#/definitions/ReusSummaryFilter"
     example:
       {
           "total": 25000,
@@ -1490,7 +1721,7 @@ definitions:
       documents:
         $ref: '#/definitions/ArrayOfSecureDocument'
       summary:
-        $ref: '#/definitions/SummaryREUSPeriod'
+        $ref: '#/definitions/ReusSummaryPeriod'
       logbook:
         $ref: '#/definitions/ArrayOfMarkLogbook'
       status:
@@ -1499,54 +1730,6 @@ definitions:
       observations:
         type: string
         description: Observaciones de la marcación
-    example:
-      {
-          "type": "REUS",
-          "period": "16-01-20201",
-          "documents": [
-              {
-                  "name": "Lista Total",
-                  "patch": "sftp://titan.nmp.com.mx/X:/REPEP/DDMMYYYY/Lista Total.csv",
-                  "metadata": {
-                      "mimeType": "text/csv",
-                      "mimeName": "csv",
-                      "extension": ".csv",
-                      "encoding": "utf-8"
-                  },
-                  "hash": "e633f4fc79badea1dc5db970cf397c8248bac47cc3acf9915ba60b5d76b0e88f"
-              }
-          ],
-          "summary": {
-              "totalPhones": 1000000,
-              "leakedPhones": 0,
-              "phonesDiscarded": 0,
-              "filters": {
-                  "total": 0,
-                  "telecomPhones": 0,
-                  "businessPhones": 0,
-                  "tourismPhones": 0,
-                  "business": {
-                      "total": 0,
-                      "conciliation": 0,
-                      "discarded": 0,
-                      "marked": {
-                          "total": 0,
-                          "new": 0,
-                          "noModifications": 0,
-                          "unmarked": 0
-                      }
-                  }
-              }
-          },
-          "logbook": [
-              {
-                  "status": "En procesamiento",
-                  "observations": "Extracción, transformación y carga de \"Lista Total.csv\" REPEP",
-              }
-          ],
-          "status": "En procesamiento",
-          "observations": "Extracción, transformación y carga de \"Lista Total.csv\" REPEP"
-      }
     
   REUSPeriod:
       title: Período REPEP
@@ -1572,7 +1755,7 @@ definitions:
           description: Período de ejecución en formato `yyyy-mm-dd`
           format: date
         summary:
-          $ref: '#/definitions/SummaryREPEPPeriod'
+          $ref: '#/definitions/ReusSummaryPeriod'
         status:
           type: string
           description: Estado de la marcación
@@ -1617,7 +1800,7 @@ definitions:
       documents:
         $ref: '#/definitions/ArrayOfSecureDocument'
       summary:
-        $ref: '#/definitions/SummaryREUSPeriod'
+        $ref: '#/definitions/ReusSummaryPeriod'
       logbook:
         $ref: '#/definitions/ArrayOfMarkLogbook'
       status:
@@ -1754,13 +1937,13 @@ definitions:
   ArrayOfREUSPeriod:
     type: array
     items:
-      $ref: "#/definitions/REUSPeriodDetail"
+      $ref: "#/definitions/REUSPeriod"
 
   PaginationOfREUSPeriod:
     type: object
     properties:
       content:
-        $ref: '#/definitions/ArrayOfREPEPPeriod'
+        $ref: '#/definitions/ArrayOfREUSPeriod'
       page:
         $ref: '#/definitions/Page'
     example:
@@ -2913,7 +3096,94 @@ parameters:
     in: body
     name: Nuevo Período REUS
     schema:
-      $ref: '#/definitions/REUSPeriodDetail'
+      $ref: '#/definitions/CreatedREUSPeriod'
+      example:
+        {
+            "type": "REUS",
+            "period": "16-01-2020",
+            "documents": [
+                {
+                    "name": "B27-00816012021.reus",
+                    "patch": "sftp://titan.nmp.com.mx/X:/REUS/DDMMYYYY/B27-00816012021.reus",
+                    "metadata": {
+                        "mimeType": "text/csv",
+                        "mimeName": "csv",
+                        "extension": ".csv",
+                        "encoding": "utf-8"
+                    },
+                    "hash": "e633f4fc79badea1dc5db970cf397c8248bac47cc3acf9915ba60b5d76b0e88f"
+                }
+            ],
+            "summary": {
+                "total": 25000,
+                "persons": 15000,
+                "phones": 20000,
+                "emails": 15000,
+                "filters": {
+                    "crm": {
+                        "persons": {
+                            "total": 15000,
+                            "search": 5000,
+                            "discarded": 10000
+                        },
+                        "phones": {
+                            "total": 1000,
+                            "search": 800,
+                            "marked": {
+                                "total": 0,
+                                "new": 0,
+                                "noModifications": 0,
+                                "unmarked": 0
+                            }
+                        },
+                        "emails": {
+                            "total": 1000,
+                            "search": 500,
+                            "marked": {
+                                "total": 0,
+                                "new": 0,
+                                "noModifications": 0,
+                                "unmarked": 0
+                            }
+                        }
+                    },
+                    "sap": {
+                        "persons": {
+                            "total": 15000,
+                            "search": 1000
+                        },
+                        "phones": {
+                            "total": 1000,
+                            "search": 800,
+                            "marked": {
+                                "total": 0,
+                                "new": 0,
+                                "noModifications": 0,
+                                "unmarked": 0
+                            }
+                        },
+                        "emails": {
+                            "total": 1000,
+                            "search": 500,
+                            "marked": {
+                                "total": 0,
+                                "new": 0,
+                                "noModifications": 0,
+                                "unmarked": 0
+                            }
+                        }
+                    }
+                }
+            },
+            "logbook": [
+                {
+                    "status": "En procesamiento",
+                    "observations": "Extracción, transformación y carga de \"B27-00816012021.reus\" REUS"
+                }
+            ],
+            "status": "En procesamiento",
+            "observations": "Extracción, transformación y carga de \"B27-00816012021.reus\" REUS"
+        }
 
 ## POST /clientes/reus/{period}/logbook
 
@@ -2928,7 +3198,7 @@ parameters:
     in: body
     name: Summary REUS Period
     schema:
-      $ref: '#/definitions/SummaryREUSPeriod'
+      $ref: '#/definitions/ReusSummaryPeriod'
 
 ## POST /clientes/{clientId}/telefonos/{phoneNumber}/reus
   CreatedSummaryREUSBody:
