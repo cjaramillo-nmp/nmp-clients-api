@@ -11,7 +11,7 @@ info:
     name: MIT
     url: https://github.com/apiaryio/polls-api/blob/master/LICENSE
 
-host: "api.nmp.com.mx"
+host: "api.montepiedad.com.mx"
 basePath: "/clients/v1"
 
 schemes:
@@ -952,7 +952,13 @@ definitions:
 ## REPEP
 
   SummaryREPEP:
+    title: Historial de Marcación por Teléfono
     type: object
+    required:
+      - period
+      - check
+      - action
+      - createdAt
     properties:
       period:
         type: string
@@ -976,22 +982,60 @@ definitions:
       }
   
   ArrayOfSummaryREPEP:
+    title: Colección de Historial de Marcación por Teléfono 
     type: array
     items: 
       $ref: "#/definitions/SummaryREPEP"
   
-  BusinessSummaryREPEP:
-    title: Resumen de marcación comercial REPEP
+  FilterBusinessMarkedREPEP:
+    title: Detalle de Marcación Comercial REPEP
     type: object
+    required:
+      - total
+      - new
+      - noModifications
+      - unmarked
+    properties:
+      total:
+        type: string
+        description: >
+          Total de Teléfonos Comerciales encontrados, contando el número de repeticiones con los números de teléfono de clientes de Nacional Monte de Piedad.
+      new:
+        type: string
+        description: >
+          Total de teléfonos marcados en el período actual
+      noModifications:
+        type: string
+        description: >
+          Total de teléfonos previamente marcados por un procesamiento prevío y que continuan en la `Lista Total.csv` con la bandera comercial activa.
+      unmarked:
+        type: string
+        description: >
+          Total de teléfonos previamente marcados por un procesamiento prevío y que no continuan en la `Lista Total.csv` con la bandera comercial activa o bien fuerón retirados.
+    
+  FilterBusinessREPEP:
+    title: Resumen de Marcación Comercial REPEP
+    type: object
+    required:
+      - total
+      - conciliation
+      - discarded
+      - marked
     properties:
       total:
         description: >
-          Total de Teléfonos Comerciales
+          Total de teléfonos con la bandera Comerciales activa del conjunto de telefonos filtrados
         type: integer
       conciliation:
         description: >
-          Total de Comerciales conciliados en con clientes de Nacional Monte de Piedad
+          Total de Teléfonos Comerciales encontrados, sin contar el número de repeticiones con los números de teléfono de clientes de Nacional Monte de Piedad.
         type: integer
+      discarded:
+        description: >
+           Total de Teléfonos Comerciales `No encontrados, con respecto a los números de teléfono de clientes de Nacional Monte de Piedad.
+        type: integer
+      marked:
+        $ref: "#/definitions/FilterBusinessMarkedREPEP"
     example:
       {
           "total": 0,
@@ -1008,42 +1052,48 @@ definitions:
   FilterREPEP:
     title: Filtro REPEP
     type: object
+    required:
+      - total
+      - telecomPhones
+      - businessPhones
+      - tourismPhones
+      - business
     properties:
       total:
-        title: Total de Teléfonos
+        title: Total de Teléfonos Filtrados
         description: > 
-          Total de teléfonos filtrados
+          Total de teléfonos originales de la `Lista Total.csv`, en donde se descartan los números ficticiós proporcionados mediante un archivo Listas Negras.
         type: integer
       telecomPhones:
         title: Teléfonos Telecominicaciones
         description: > 
-          Número de teléfonos, no contactables para sector de telecomunicaciones
+          Total de teléfonos con la bandera Telecominicaciones activa del conjunto de telefonos filtrados.
         type: integer
       businessPhones:
         title: Teléfonos Comerciales
         type: integer
         description: > 
-          Número de teléfonos, no contactables para sector comercial
+          Total de teléfonos con la bandera Comerciales activa del conjunto de telefonos filtrados.
       tourismPhones:
         title: Teléfonos Turíscos
         type: integer
         description: > 
-          Número de teléfonos, no contactables para sector turísco
+          Total de teléfonos con la bandera Turíscos activa del conjunto de telefonos filtrados.
       business:
-        $ref: "#/definitions/BusinessSummaryREPEP"
+        $ref: "#/definitions/FilterBusinessREPEP"
     example:
       {
-          "total": 0,
-          "telecomPhones": 0,
-          "businessPhones": 0,
-          "tourismPhones": 0,
+          "total": 1000000,
+          "telecomPhones": 350000,
+          "businessPhones": 450000,
+          "tourismPhones": 350000,
           "business": {
-              "total": 0,
-              "conciliation": 0,
-              "discarded": 0,
+              "total": 450000,
+              "conciliation": 100000,
+              "discarded": 350000,
               "marked": {
-                  "total": 0,
-                  "new": 0,
+                  "total": 150000,
+                  "new": 150000,
                   "noModifications": 0,
                   "unmarked": 0
               }
@@ -1058,26 +1108,26 @@ definitions:
         title: Total de Teléfonos
         type: integer
         description: >
-          Total de teléfonos originales de la Lista Total proporcionada por PROFECO
+          Total de teléfonos originales de la `Lista Total.csv` proporcionada por PROFECO y obtenida durante el proceso de descarga.
       leakedPhones:
         title: Teléfonos filtrados
         type: integer
         description: >
-          Total de teléfonos filtrados originales de la Lista Total proporcionada por PROFECO
+          Total de teléfonos originales de la `Lista Total.csv`, en donde se descartan los números ficticiós proporcionados mediante un archivo Listas Negras.
       phonesDiscarded:
         title: Teléfonos descartados
         type: integer
         description: >
-          Total de teléfonos originales descartados de la Lista Total proporcionada por PROFECO
+          Total de teléfonos originales de la `Lista Total.csv`, descartados debido a su coincidencia con los números ficticiós proporcionados mediante un archivo Listas Negras.
       filters:
         $ref: "#/definitions/FilterREPEP"
     example: 
       {
-          "totalPhones": 0,
-          "leakedPhones": 0,
-          "phonesDiscarded": 0,
+          "totalPhones": 1000000,
+          "leakedPhones": 800000,
+          "phonesDiscarded": 200000,
           "filters": {
-              "total": 0,
+              "total": 1000000,
               "telecomPhones": 0,
               "businessPhones": 0,
               "tourismPhones": 0,
@@ -1399,6 +1449,7 @@ definitions:
           "createdAt": "17-02-2021T09:43:00",
           "updatedAt": "17-02-2021T09:43:00",
       }
+
 
 ## REUS
 
