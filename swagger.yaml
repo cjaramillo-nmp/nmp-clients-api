@@ -543,6 +543,11 @@ paths:
       - $ref: '#/parameters/DataOriginHeader'
       - $ref: '#/parameters/ProductHeader'
       - $ref: '#/parameters/ClientIdCRMPath'
+      - in: header
+        name: idConsumidor
+        description: Identificador del aplicativo consumidor
+        type: string
+        default: "1"
     post:
       tags:
         - Nivel Ajsutado Cliente
@@ -579,6 +584,11 @@ paths:
       - $ref: '#/parameters/DataOriginHeader'
       - $ref: '#/parameters/ProductHeader'
       - $ref: '#/parameters/ClientIdCRMPath'
+      - in: header
+        name: idConsumidor
+        description: Identificador del aplicativo consumidor
+        type: string
+        default: "1"
       - name: idNivelAjustado
         in: path
         description: Identificado del nivel ajustado a actualizar
@@ -619,6 +629,11 @@ paths:
       - $ref: '#/parameters/UOHeader'
       - $ref: '#/parameters/DataOriginHeader'
       - $ref: '#/parameters/ProductHeader'
+      - in: header
+        name: idConsumidor
+        description: Identificador del aplicativo consumidor
+        type: string
+        default: "1"
     get:
       tags:
         - Nivel Ajsutado Cliente
