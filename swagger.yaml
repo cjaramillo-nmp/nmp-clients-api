@@ -41,6 +41,1385 @@ securityDefinitions:
       postCreatedREPEPV1: Grants write access
       postCreatedREUSV1: Grants write access
 
+paths:
+  /clientes/busqueda:
+    x-summary: /clientes/busqueda
+    parameters:
+      - $ref: '#/parameters/ChannelHeader'
+      - $ref: '#/parameters/UOHeader'
+      - $ref: '#/parameters/DataOriginHeader'
+      - $ref: '#/parameters/ProductHeader'
+    get:
+      tags:
+        - Clientes
+      operationId: getExistsClientsByFilterV1
+      summary: Búsqueda de cliente existente
+      security:
+        - OAuth2: [getExistsClientsByFilterV1]
+      description: >
+        Este recurso `GET`, nos permite identificar si existe uno o más clientes
+        similares. Sin exponer la información personal del cliente, prospecto u
+        oportunidad. Los criterios de búsqueda son:
+          * Tipo de Persona
+          * Nombre (s) 
+          * Apellido Paterno
+          * Apellido Materno
+          * CURP
+          * RFC
+          * Fecha de Nacimiento en formato `yyyy-mm-dd`
+          * Télefono
+          * Correo electrónico
+          * Razón Social
+          * Unidad Organizacional
+          * Canal
+          * Origen del Dato
+          * Producto
+      parameters:
+        - $ref: "#/parameters/UOQueryParam"
+        - $ref: "#/parameters/ChannelQueryParam"
+        - $ref: "#/parameters/ProductQueryParam"
+        - $ref: "#/parameters/DataOriginQueryParam"
+        - in: query
+          name: tipoPersona
+          description: Tipo de persona ha búscar (Fisica o Moral)
+          type: string
+          format: uuid
+        - in: query
+          name: nombre
+          description: Nombre (s) del individuo a búscar
+          type: string
+        - in: query
+          name: apellidoPaterno
+          description: Apellido paterno del individuo a búscar
+          type: string
+        - in: query
+          name: apellidoMaterno
+          description: Apellido materno del individuo a búscar
+          type: string
+        - in: query
+          name: fechaNacimiento
+          description: Fecha de Nacimiento
+          type: string
+          format: date
+        - in: query
+          name: curp
+          description: Calve Única de Registro de Población
+          type: string
+        - in: query
+          name: rfc
+          description: Registro Federal de Contribuyentes
+          type: string
+        - in: query
+          name: telefono
+          description: Número de teléfono
+          type: string
+        - in: query
+          name: correo
+          description: Correo electrónico
+          type: string
+      responses:
+        '200':
+          $ref: '#/responses/ResponseGetExistsClientsByFilterV1'
+        '400':
+          $ref: '#/responses/BadRequest'
+        '401':
+          $ref: '#/responses/Unauthorized'
+        '403':
+          $ref: '#/responses/Forbidden'
+        '404':
+          $ref: '#/responses/NotFound'
+        '500':
+          $ref: '#/responses/InternalServerError'
+  /clientes/{clientId}/reus:
+    x-summary: /clientes/{clientId}/reus
+    parameters:
+      - $ref: '#/parameters/ChannelHeader'
+      - $ref: '#/parameters/UOHeader'
+      - $ref: '#/parameters/DataOriginHeader'
+      - $ref: '#/parameters/ProductHeader'
+      - $ref: '#/parameters/ClientIdPath'
+    get:
+      tags:
+        - Clientes REUS
+      operationId: getREUSDetailByClientIdV1
+      summary: Paginación REUS de un Cliente.
+      description:  >
+        Puede realizar una petición de tipo GET a https://dev.montepiedad.com.mx/clientes/{clientId}/reus, 
+        para recuperar todos los teléfonos y correos electrónicos asociados a un cliente.
+        
+        Ordenamiento ascendente por fecha de creación:
+          
+          `https://nmp.com.mx/clientes/{clientId}/reus?sortOrder=ACS&sortBy=createdAt`
+          
+          Ordenamiento descendente por fecha de creación:
+          
+          `https://nmp.com.mx/clientes/{clientId}/reus?sortOrder=DESC&sortBy=createdAt`
+      parameters:
+        
+        - $ref: "#/parameters/WithPhonesQueryParam"
+        - $ref: "#/parameters/WithEmailsQueryParam"
+        
+        - $ref: "#/parameters/FromCreatedAtQueryParam"
+        - $ref: "#/parameters/ToCreatedAtQueryParam"
+        
+        - $ref: "#/parameters/SortOrderQueryParam"
+          
+      responses:
+        '200':
+          $ref: '#/responses/GetReusByClientIdResponseV1'
+        '400':
+          $ref: '#/responses/BadRequest'
+        '401':
+          $ref: '#/responses/Unauthorized'
+        '403':
+          $ref: '#/responses/Forbidden'
+        '404':
+          $ref: '#/responses/NotFound'
+        '500':
+          $ref: '#/responses/InternalServerError'
+  /clientes/{clientId}/reus/report:
+    x-summary: /clientes/{clientId}/reus/report
+    parameters:
+      - $ref: '#/parameters/ChannelHeader'
+      - $ref: '#/parameters/UOHeader'
+      - $ref: '#/parameters/DataOriginHeader'
+      - $ref: '#/parameters/ProductHeader'
+      - $ref: '#/parameters/ClientIdPath'
+    get:
+      tags:
+        - Clientes REUS
+      operationId: getPDFREUSByClientIdV1
+      summary: Reporte de Marcación REUS de un Cliente.
+      description: |
+        Genera el reporte en formato PDF de la Marcación REUS de un Cliente.
+      parameters:
+        - $ref: "#/parameters/WithPhonesQueryParam"
+        - $ref: "#/parameters/WithEmailsQueryParam"
+      produces:
+        - application/pdf
+      responses:
+        '200':
+          $ref: '#/responses/GetPDFReusByClientIdResponseV1'
+        '400':
+          $ref: '#/responses/BadRequest'
+        '401':
+          $ref: '#/responses/Unauthorized'
+        '403':
+          $ref: '#/responses/Forbidden'
+        '404':
+          $ref: '#/responses/NotFound'
+        '500':
+          $ref: '#/responses/InternalServerError'
+  /clientes/{clientId}/repep:
+    x-summary: /clientes/{clientId}/repep
+    parameters:
+      - $ref: '#/parameters/ChannelHeader'
+      - $ref: '#/parameters/UOHeader'
+      - $ref: '#/parameters/DataOriginHeader'
+      - $ref: '#/parameters/ProductHeader'
+      
+      - $ref: '#/parameters/ClientIdPath'
+    get:
+      tags:
+        - Clientes REPEP
+      operationId: getREPEPDetailByClientIdV1
+      summary: Paginación REPEP de un Cliente.
+      description: >
+        Puede realizar una petición de tipo GET a https://dev.montepiedad.com.mx/clientes/{clientId}/repep, 
+        para recuperar todos los teléfonos asociados aun cliente.
+        
+        Por defecto recuperará los primeros 20 elementos (máximo 30), algunos ejemplos:
+          
+          Ordenamiento ascendente por fecha de creación:
+          
+          `https://nmp.com.mx/clientes/{clientId}/repep?sortOrder=ACS&sortBy=createdAt`
+          
+          Ordenamiento descendente por fecha de creación:
+          
+          `https://nmp.com.mx/clientes/{clientId}/repep?sortOrder=DESC&sortBy=createdAt`
+      parameters:
+        
+        - $ref: "#/parameters/FromCreatedAtQueryParam"
+        - $ref: "#/parameters/ToCreatedAtQueryParam"
+        
+        - $ref: "#/parameters/OrderByQueryParam"
+        - $ref: "#/parameters/SortOrderQueryParam"
+        
+      responses:
+        '200':
+          $ref: '#/responses/GetREPEPByClientIdResponseV1'
+        '400':
+          $ref: '#/responses/BadRequest'
+        '401':
+          $ref: '#/responses/Unauthorized'
+        '403':
+          $ref: '#/responses/Forbidden'
+        '404':
+          $ref: '#/responses/NotFound'
+        '500':
+          $ref: '#/responses/InternalServerError'
+  /clientes/{clientId}/repep/report:
+    x-summary: /clientes/{clientId}/repep/report
+    parameters:
+      - $ref: '#/parameters/ChannelHeader'
+      - $ref: '#/parameters/UOHeader'
+      - $ref: '#/parameters/DataOriginHeader'
+      - $ref: '#/parameters/ProductHeader'
+      - $ref: '#/parameters/ClientIdPath'
+    get:
+      tags:
+        - Clientes REPEP
+      operationId: getPDFREPEPByClientIdV1
+      summary: Genera el reporte en formato PDF de la marcación REPEP de un cliente.
+      description: |
+          Genera el reporte en formato PDF de la marcación REPEP de un cliente.
+      produces:
+        - application/pdf
+      responses:
+        '200':
+          $ref: '#/responses/ResponseGetReportRepepByClientIdV1'
+        '400':
+          $ref: '#/responses/BadRequest'
+        '401':
+          $ref: '#/responses/Unauthorized'
+        '403':
+          $ref: '#/responses/Forbidden'
+        '404':
+          $ref: '#/responses/NotFound'
+        '500':
+          $ref: '#/responses/InternalServerError'
+  /clientes/{clientId}/telefonos/{phoneNumber}/repep:
+    x-summary: /clientes/{clientId}/telefonos/{phoneNumber}/repep
+    parameters:
+      - $ref: '#/parameters/ChannelHeader'
+      - $ref: '#/parameters/UOHeader'
+      - $ref: '#/parameters/DataOriginHeader'
+      - $ref: '#/parameters/ProductHeader'
+      - $ref: '#/parameters/ClientIdPath'
+      - $ref: '#/parameters/PhoneNumberPath'
+    get:
+      tags:
+        - Cliente Teléfonos
+      operationId: getREPEPByClientIdAndPhoneNumberV1
+      summary: >
+        Resumen de marcación REPEP.
+      description: |
+         Consulta la marcación REPEP de un cliente, por número de telefono.
+      responses:
+        '200':
+          $ref: '#/responses/ResponseGetRepepByClientIdAndPhoneNumberV1'
+        '400':
+          $ref: '#/responses/BadRequest'
+        '401':
+          $ref: '#/responses/Unauthorized'
+        '403':
+          $ref: '#/responses/Forbidden'
+        '404':
+          $ref: '#/responses/NotFound'
+        '500':
+          $ref: '#/responses/InternalServerError'
+    post:
+      tags:
+        - Cliente Teléfonos
+      operationId: postREPEPByClientIdAndPhoneNumberV1
+      summary:  Actualiza la marcación REPEP de un cliente, por número de telefono.
+      description: |
+         Actualiza la marcación REPEP de un cliente, por número de telefono.
+      parameters:
+        - $ref: '#/parameters/CreatedSummaryREPEPBody'
+      responses:
+        '201':
+          $ref: '#/responses/ResponsePostRepepByClientIdAndPhoneNumberV1'
+        '400':
+          $ref: '#/responses/BadRequest'
+        '401':
+          $ref: '#/responses/Unauthorized'
+        '403':
+          $ref: '#/responses/Forbidden'
+        '404':
+          $ref: '#/responses/NotFound'
+        '500':
+          $ref: '#/responses/InternalServerError'
+  /clientes/{clientId}/telefonos/{phoneNumber}/repep/report:
+    x-summary: /clientes/{clientId}/telefonos/{phoneNumber}/repep/report
+    parameters:
+      - $ref: '#/parameters/ChannelHeader'
+      - $ref: '#/parameters/UOHeader'
+      - $ref: '#/parameters/DataOriginHeader'
+      - $ref: '#/parameters/ProductHeader'
+      - $ref: '#/parameters/ClientIdPath'
+      - $ref: '#/parameters/PhoneNumberPath'
+    get:
+      tags:
+        - Cliente Teléfonos
+      operationId: getPDFREPEPByClientIdAndPhoneNumberV1
+      summary: Genera el reporte en formato PDF de la marcación REPEP de un cliente, por número de telefono.
+      description: |
+          Genera el reporte en formato PDF de la marcación REPEP de un cliente, por número de telefono.
+      produces:
+        - application/pdf
+      responses:
+        '200':
+          $ref: '#/responses/ResponseGetReportRepepByClientIdAndPhoneNumberV1'
+        '400':
+          $ref: '#/responses/BadRequest'
+        '401':
+          $ref: '#/responses/Unauthorized'
+        '403':
+          $ref: '#/responses/Forbidden'
+        '404':
+          $ref: '#/responses/NotFound'
+        '500':
+          $ref: '#/responses/InternalServerError'
+  /clientes/{clientId}/telefonos/{phoneNumber}/reus:
+    x-summary: /clientes/{clientId}/telefonos/{phoneNumber}/reus
+    parameters:
+      - $ref: '#/parameters/ChannelHeader'
+      - $ref: '#/parameters/UOHeader'
+      - $ref: '#/parameters/DataOriginHeader'
+      - $ref: '#/parameters/ProductHeader'
+      - $ref: '#/parameters/ClientIdPath'
+      - $ref: '#/parameters/PhoneNumberPath'
+    get:
+      tags:
+        - Cliente Teléfonos
+      operationId: getREUSByClientIdAndPhoneNumberV1
+      summary: Consulta la marcación REUS de un cliente, por número de telefono.
+      description: |
+         Consulta la marcación REUS de un cliente, por número de telefono.
+      responses:
+        '200':
+          $ref: '#/responses/ResponseGetReusByClientIdAndPhoneNumberV1'
+        '400':
+          $ref: '#/responses/BadRequest'
+        '401':
+          $ref: '#/responses/Unauthorized'
+        '403':
+          $ref: '#/responses/Forbidden'
+        '404':
+          $ref: '#/responses/NotFound'
+        '500':
+          $ref: '#/responses/InternalServerError'
+    post:
+      tags:
+        - Cliente Teléfonos
+      operationId: postREUSByClientIdAndPhoneNumberV1
+      summary:  Actualiza la marcación REUS de un cliente, por número de telefono.
+      description: |
+         Actualiza la marcación REUS de un cliente, por número de telefono.
+      parameters:
+        - $ref: '#/parameters/CreatedSummaryREUSBody'
+      responses:
+        '201':
+          $ref: '#/responses/ResponsePostReusByClientIdAndPhoneNumberV1'
+        '400':
+          $ref: '#/responses/BadRequest'
+        '401':
+          $ref: '#/responses/Unauthorized'
+        '403':
+          $ref: '#/responses/Forbidden'
+        '404':
+          $ref: '#/responses/NotFound'
+        '500':
+          $ref: '#/responses/InternalServerError'
+  /clientes/{clientId}/telefonos/{phoneNumber}/reus/report:
+    x-summary: /clientes/{clientId}/telefonos/{phoneNumber}/reus/report
+    parameters:
+      - $ref: '#/parameters/ChannelHeader'
+      - $ref: '#/parameters/UOHeader'
+      - $ref: '#/parameters/DataOriginHeader'
+      - $ref: '#/parameters/ProductHeader'
+      - $ref: '#/parameters/ClientIdPath'
+      - $ref: '#/parameters/PhoneNumberPath'
+    get:
+      tags:
+        - Cliente Teléfonos
+      operationId: getPdfREUSByClientIdAndPhoneNumberV1
+      summary: Reporte en marcación REUS por número de teléfono.
+      description: |
+         Reporte en marcación REUS por número de teléfono.
+      produces:
+        - application/pdf
+      responses:
+        '200':
+          $ref: '#/responses/ResponseGetPdfReusByClientIdAndPhoneNumberV1'
+        '400':
+          $ref: '#/responses/BadRequest'
+        '401':
+          $ref: '#/responses/Unauthorized'
+        '403':
+          $ref: '#/responses/Forbidden'
+        '404':
+          $ref: '#/responses/NotFound'
+        '500':
+          $ref: '#/responses/InternalServerError'
+  /clientes/{clientId}/correos/{email}/reus:
+    x-summary: /clientes/{clientId}/correos/{email}/reus
+    parameters:
+      - $ref: '#/parameters/ChannelHeader'
+      - $ref: '#/parameters/UOHeader'
+      - $ref: '#/parameters/DataOriginHeader'
+      - $ref: '#/parameters/ProductHeader'
+      - $ref: '#/parameters/ClientIdPath'
+      - $ref: '#/parameters/EmailIdNumberPath'
+    get:
+      tags:
+        - Cliente Correos
+      operationId: getREUSByClientIdAndEmailNumberV1
+      summary: Consulta la marcación REUS de un cliente, por correo electrónico.
+      description: |
+         Consulta la marcación REUS de un cliente, por correo electrónico.
+      responses:
+        '200':
+          $ref: '#/responses/ResponseGetReusByClientIdAndEmailV1'
+        '400':
+          $ref: '#/responses/BadRequest'
+        '401':
+          $ref: '#/responses/Unauthorized'
+        '403':
+          $ref: '#/responses/Forbidden'
+        '404':
+          $ref: '#/responses/NotFound'
+        '500':
+          $ref: '#/responses/InternalServerError'
+    post:
+      tags:
+        - Cliente Correo
+      operationId: postREUSByClientIdAndEmailV1
+      summary:  Actualiza la marcación REUS de un cliente, por correo electrónico.
+      description: |
+         Actualiza la marcación REUS de un cliente, por correo electrónico.
+      parameters:
+        - $ref: '#/parameters/CreatedSummaryREUSBody'
+      responses:
+        '201':
+          $ref: '#/responses/ResponsePostReusByClientIdAndEmailV1'
+        '400':
+          $ref: '#/responses/BadRequest'
+        '401':
+          $ref: '#/responses/Unauthorized'
+        '403':
+          $ref: '#/responses/Forbidden'
+        '404':
+          $ref: '#/responses/NotFound'
+        '500':
+          $ref: '#/responses/InternalServerError'
+  /clientes/{clientId}/correos/{email}/reus/report:
+    x-summary: /clientes/{clientId}/correos/{email}/reus/report
+    parameters:
+      - $ref: '#/parameters/ChannelHeader'
+      - $ref: '#/parameters/UOHeader'
+      - $ref: '#/parameters/DataOriginHeader'
+      - $ref: '#/parameters/ProductHeader'
+      - $ref: '#/parameters/ClientIdPath'
+      - $ref: '#/parameters/EmailIdNumberPath'
+    get:
+      tags:
+        - Cliente Correos
+      operationId: getPdfREUSByClientIdAndEmailV1
+      summary: Reporte en marcación REUS por correo electrónico.
+      description: |
+         Reporte en marcación REUS por correo electrónico.
+      produces:
+        - application/pdf
+      responses:
+        '200':
+          $ref: '#/responses/ResponseGetPdfReusByClientIdAndEmailV1'
+        '400':
+          $ref: '#/responses/BadRequest'
+        '401':
+          $ref: '#/responses/Unauthorized'
+        '403':
+          $ref: '#/responses/Forbidden'
+        '404':
+          $ref: '#/responses/NotFound'
+        '500':
+          $ref: '#/responses/InternalServerError'
+  /clientes/{clientIdCRM}/nivelajustado:
+    x-summary: Alta Metal Ajustado Cliente.
+    parameters:
+      - $ref: '#/parameters/ChannelHeader'
+      - $ref: '#/parameters/UOHeader'
+      - $ref: '#/parameters/DataOriginHeader'
+      - $ref: '#/parameters/ProductHeader'
+      - $ref: '#/parameters/ClientIdCRMPath'
+    post:
+      tags:
+        - Nivel Ajsutado Cliente
+      operationId: postNivelAjustado
+      summary: Alta Metal Ajustado
+      description: | 
+        Capacidad para dar de alta un nuevo metal ajustado del cliente, 
+        el cual podrá recibir los metales actualmente existentes: 
+        - DIAMANTE
+        - PLATINO_MAS
+        - PLATINO
+        - ORO_MAS
+        - ORO
+        - PLATA
+        - BRONCE
+      parameters:
+        - $ref: '#/parameters/CrearMetalAjustadoBody'
+      responses:
+        '201':
+          $ref: '#/responses/CrearMetalAjustadoResponseBody'
+        '400':
+          $ref: '#/responses/BadRequest'
+        '401':
+          $ref: '#/responses/Unauthorized'
+        '403':
+          $ref: '#/responses/Forbidden'
+        '500':
+          $ref: '#/responses/InternalServerError'
+  /clientes/{clientIdCRM}/nivelajustado/{idNivelAjustado}:
+    x-summary: Actualización Metal Ajustado Cliente.
+    parameters:
+      - $ref: '#/parameters/ChannelHeader'
+      - $ref: '#/parameters/UOHeader'
+      - $ref: '#/parameters/DataOriginHeader'
+      - $ref: '#/parameters/ProductHeader'
+      - $ref: '#/parameters/ClientIdCRMPath'
+      - name: idNivelAjustado
+        in: path
+        description: Identificado del nivel ajustado a actualizar
+        type: string
+        required: true
+    put:
+      tags:
+        - Nivel Ajsutado Cliente
+      operationId: putNivelAjustado
+      summary: Actualización Metal Ajustado
+      description: | 
+        Capacidad para actualizar un metal ajustado del cliente, 
+        el cual podrá recibir los metales actualmente existentes: 
+        - DIAMANTE
+        - PLATINO_MAS
+        - PLATINO
+        - ORO_MAS
+        - ORO
+        - PLATA
+        - BRONCE
+      parameters:
+        - $ref: '#/parameters/CrearMetalAjustadoBody'
+      responses:
+        '200':
+          $ref: '#/responses/ActualizarMetalAjustadoResponseBody'
+        '400':
+          $ref: '#/responses/BadRequest'
+        '401':
+          $ref: '#/responses/Unauthorized'
+        '403':
+          $ref: '#/responses/Forbidden'
+        '500':
+          $ref: '#/responses/InternalServerError'
+  /clientes/nivelajustado:
+    x-summary: Consulta Metal Ajustado Clientes.
+    parameters:
+      - $ref: '#/parameters/ChannelHeader'
+      - $ref: '#/parameters/UOHeader'
+      - $ref: '#/parameters/DataOriginHeader'
+      - $ref: '#/parameters/ProductHeader'
+    get:
+      tags:
+        - Nivel Ajsutado Cliente
+      operationId: getNivelAjustado
+      summary: Actualización Metal Ajustado
+      description: | 
+        Capacidad para consultar los registros de metal ajustado, 
+        los cuales podrán ser consultados por medio de los sigueintes parámetros opcionales: 
+        
+        - idCliente
+        - fechaInicio
+        - fechaFin
+        - pageNumber
+        - pageSize
+        - orderBy
+        - sortOrder
+        
+        *En caso de que no se porporcione al menos un parámetro, el servicio únicamente retornará 10 registros.*
+      parameters:
+        - name: idCliente
+          in: query 
+          type: number
+          description: Identificador único de Cliente asignado por CRM
+          format: int64
+        - name: fechaInicio
+          in: query 
+          type: string
+          description: Fecha en la que se dará incio a la vigencia del Metal Ajustado en formato `yyyy-mm-dd`
+          format: date
+        - name: fechaFin
+          in: query 
+          type: string
+          description: Fecha en la que se dará incio a la vigencia del Metal Ajustado en formato `yyyy-mm-dd`
+          format: date
+        - $ref: '#/parameters/PageNumberQueryParam'
+        - $ref: '#/parameters/PageSizeQueryParam'
+        - $ref: '#/parameters/OrderByQueryParam'
+        - $ref: '#/parameters/SortOrderQueryParam'
+      responses:
+        '200':
+          $ref: '#/responses/ConsultarMetalAjustadoResponseBody'
+        '400':
+          $ref: '#/responses/BadRequest'
+        '401':
+          $ref: '#/responses/Unauthorized'
+        '403':
+          $ref: '#/responses/Forbidden'
+        '500':
+          $ref: '#/responses/InternalServerError'
+  
+  
+  /clientes/repep:
+    x-summary: /clientes/repep
+    parameters:
+      - $ref: '#/parameters/ChannelHeader'
+      - $ref: '#/parameters/UOHeader'
+      - $ref: '#/parameters/DataOriginHeader'
+      - $ref: '#/parameters/ProductHeader'
+    get:
+      tags:
+        - REPEP
+      operationId: getPaginationOfREPEPV1
+      summary: Paginación de Marcación REPEP.
+      description: >
+        Puede realizar una petición de tipo GET a https://dev.montepiedad.com.mx/clientes/repep, 
+        para recuperar todas los periodos REPEP ejecutados.
+        
+        Por defecto recuperará los primeros 20 elementos (máximo 30), algunos ejemplos:
+          
+          Primeros 30 elementos:
+          `https://nmp.com.mx/clientes/repep?pageNumber=0&pageSize=30`
+          
+          Siguientes 30 elementos:
+          `https://nmp.com.mx/clientes/repep?pageNumber=1&pageSize=30`
+          
+          Últimos 20 elementos:
+          `https://nmp.com.mx/clientes/repep?pageNumber=2&pageSize=30`
+          
+          Ordenamiento ascendente por fecha de creación:
+          
+          `https://nmp.com.mx/clientes/repep?sortOrder=ACS&sortBy=createdAt`
+          
+          Ordenamiento descendente por fecha de creación:
+          
+          `https://nmp.com.mx/clientes/repep?sortOrder=DESC&sortBy=createdAt`
+      parameters:
+        
+        - $ref: "#/parameters/FromPeriodQueryParam"
+        - $ref: "#/parameters/ToPeriodQueryParam"
+        
+        - $ref: "#/parameters/FromCreatedAtQueryParam"
+        - $ref: "#/parameters/ToCreatedAtQueryParam"
+        
+        - $ref: "#/parameters/OrderByQueryParam"
+        - $ref: "#/parameters/SortOrderQueryParam"
+        
+        - $ref: "#/parameters/PageNumberQueryParam"
+        - $ref: "#/parameters/PageSizeQueryParam"
+        
+      security:
+        - OAuth2: [getPaginationOfREPEPV1]
+      responses:
+        '200':
+          $ref: '#/responses/GetPaginationREPEPResponseV1'
+        '400':
+          $ref: '#/responses/BadRequest'
+        '401':
+          $ref: '#/responses/Unauthorized'
+        '403':
+          $ref: '#/responses/Forbidden'
+        '404':
+          $ref: '#/responses/NotFound'
+        '500':
+          $ref: '#/responses/InternalServerError'
+    post:
+      tags:
+        - REPEP
+      operationId: postCreatedREPEPV1
+      summary: Creación de Período REPEP.
+      description: |
+        Esta operación permite crear un nuevo período de marcación REPEP
+      security:
+        - OAuth2: [postCreatedREPEPV1]
+      parameters:
+        - $ref: '#/parameters/CreatedREPEPPeriodBody'
+      responses:
+        '201':
+          $ref: '#/responses/PostCreatedREPEPPerioResponseV1'
+        '400':
+          $ref: '#/responses/BadRequest'
+        '401':
+          $ref: '#/responses/Unauthorized'
+        '403':
+          $ref: '#/responses/Forbidden'
+        '404':
+          $ref: '#/responses/NotFound'
+        '500':
+          $ref: '#/responses/InternalServerError'
+  /clientes/repep/{period}:
+    x-summary: /clientes/repep/{period}
+    parameters:
+      - $ref: '#/parameters/ChannelHeader'
+      - $ref: '#/parameters/UOHeader'
+      - $ref: '#/parameters/DataOriginHeader'
+      - $ref: '#/parameters/PeriodPath'
+    get:
+      tags:
+        - REPEP
+      operationId: getREPEPDetailByPeriodV1
+      summary: Detalle de Operación REPEP.
+      description: |
+        Recupera el detalle de una operación REPEP por periodo
+      responses:
+        '200':
+          $ref: '#/responses/GetREPEPPeriodDetailByPeriodResponseV1'
+        '400':
+          $ref: '#/responses/BadRequest'
+        '401':
+          $ref: '#/responses/Unauthorized'
+        '403':
+          $ref: '#/responses/Forbidden'
+        '404':
+          $ref: '#/responses/NotFound'
+        '500':
+          $ref: '#/responses/InternalServerError'
+  /clientes/repep/{period}/logbook:
+    x-summary: /clientes/repep/{period}/logbook
+    parameters:
+      - $ref: '#/parameters/ChannelHeader'
+      - $ref: '#/parameters/UOHeader'
+      - $ref: '#/parameters/DataOriginHeader'
+      - $ref: '#/parameters/PeriodPath'
+    post:
+      tags:
+        - REPEP
+      summary: Añade información a la bitacora de operación REPEP
+      description: |
+        Añade información a la bitacora de operación REPEP
+      parameters:
+        - $ref: '#/parameters/CreatedMarkLogbookREPEPBody'
+      responses:
+        '204':
+          $ref: '#/responses/NoContent'
+        '400':
+          $ref: '#/responses/BadRequest'
+        '401':
+          $ref: '#/responses/Unauthorized'
+        '403':
+          $ref: '#/responses/Forbidden'
+        '404':
+          $ref: '#/responses/NotFound'
+        '500':
+          $ref: '#/responses/InternalServerError'
+  /clientes/repep/{period}/summary:
+    x-summary: /clientes/repep/{period}/summary
+    parameters:
+      - $ref: '#/parameters/ChannelHeader'
+      - $ref: '#/parameters/UOHeader'
+      - $ref: '#/parameters/DataOriginHeader'
+      - $ref: '#/parameters/PeriodPath'
+    post:
+      tags:
+        - REPEP
+      summary: Actualiza el Resumen de Período REPEP
+      description: |
+        Actualiza el Resumen de Período REPEP
+      parameters:
+        - $ref: '#/parameters/CreatedSummaryREPEPPeriodBody'
+      responses:
+        '204':
+          $ref: '#/responses/NoContent'
+        '400':
+          $ref: '#/responses/BadRequest'
+        '401':
+          $ref: '#/responses/Unauthorized'
+        '403':
+          $ref: '#/responses/Forbidden'
+        '404':
+          $ref: '#/responses/NotFound'
+        '500':
+          $ref: '#/responses/InternalServerError'
+  /clientes/report/repep:
+    x-summary: /clientes/report/repep
+    parameters:
+      - $ref: '#/parameters/ChannelHeader'
+      - $ref: '#/parameters/UOHeader'
+      - $ref: '#/parameters/DataOriginHeader'
+      - $ref: '#/parameters/ProductHeader'
+    get:
+      tags:
+        - Reporte REPEP
+      operationId: getPdfPaginationOfREPEV1
+      summary: Geración de Historico de Marcación REPEP.
+      description: >
+        Puede realizar una petición de tipo GET a https://dev.montepiedad.com.mx/clientes/repep/report, 
+        para recuperar todas los periodos REPEP ejecutados en un Reporte PDF.
+        
+        > Ordenamiento ascendente por fecha de creación:
+          
+          `https://nmp.com.mx/clientes/repep/report?sortOrder=ACS&sortBy=createdAt`
+          
+        > Ordenamiento descendente por fecha de creación:
+          
+          `https://nmp.com.mx/clientes/repep/report?sortOrder=DESC&sortBy=createdAt`
+      parameters:
+        - $ref: "#/parameters/FromPeriodQueryParam"
+        - $ref: "#/parameters/ToPeriodQueryParam"
+        
+        - $ref: "#/parameters/FromCreatedAtQueryParam"
+        - $ref: "#/parameters/ToCreatedAtQueryParam"
+        
+        - $ref: "#/parameters/OrderByQueryParam"
+        - $ref: "#/parameters/SortOrderQueryParam"
+      security:
+        - OAuth2: [getPaginationOfREPEPV1]
+      produces:
+        - application/pdf
+      responses:
+        '200':
+          $ref: '#/responses/GetPdfPaginationREPEPResponseV1'
+        '400':
+          $ref: '#/responses/BadRequest'
+        '401':
+          $ref: '#/responses/Unauthorized'
+        '403':
+          $ref: '#/responses/Forbidden'
+        '404':
+          $ref: '#/responses/NotFound'
+        '500':
+          $ref: '#/responses/InternalServerError'
+  /clientes/report/repep/{period}:
+    x-summary: /clientes/report/repep/{period}
+    parameters:
+      - $ref: '#/parameters/ChannelHeader'
+      - $ref: '#/parameters/UOHeader'
+      - $ref: '#/parameters/DataOriginHeader'
+      - $ref: '#/parameters/PeriodPath'
+    get:
+      tags:
+        - Reporte REPEP
+      operationId: getPdfREPEPDetailByPeriodV1
+      summary: Genera Reporte de Período REPEP
+      description: |
+        Genera Reporte de Período REPEP en formato PDF
+      produces:
+        - application/pdf
+      responses:
+        '200':
+          $ref: '#/responses/GetReportREPEPDetailByPeriodResponseV1'
+        '400':
+          $ref: '#/responses/BadRequest'
+        '401':
+          $ref: '#/responses/Unauthorized'
+        '403':
+          $ref: '#/responses/Forbidden'
+        '404':
+          $ref: '#/responses/NotFound'
+        '500':
+          $ref: '#/responses/InternalServerError'
+  /clientes/reus:
+    x-summary: /clientes/reus
+    parameters:
+      - $ref: '#/parameters/ChannelHeader'
+      - $ref: '#/parameters/UOHeader'
+      - $ref: '#/parameters/DataOriginHeader'
+      - $ref: '#/parameters/ProductHeader'
+    get:
+      tags:
+        - REUS
+      operationId: getPaginationREUSV1
+      summary: Paginación de Marcación REUS.
+      description: >
+        Puede realizar una petición de tipo GET a https://dev.montepiedad.com.mx/clientes/reus, 
+        para recuperar todas los periodos REUS ejecutados.
+        
+        Por defecto recuperará los primeros 20 elementos (máximo 30), algunos ejemplos:
+          
+          Primeros 30 elementos:
+          `https://nmp.com.mx/clientes/reus?pageNumber=0&pageSize=30`
+          
+          Siguientes 30 elementos:
+          `https://nmp.com.mx/clientes/reus?pageNumber=1&pageSize=30`
+          
+          Últimos 20 elementos:
+          `https://nmp.com.mx/clientes/reus?pageNumber=2&pageSize=30`
+      parameters:
+        
+        - $ref: "#/parameters/MarkREUSTypeQueryParam"
+        
+        - $ref: "#/parameters/FromPeriodQueryParam"
+        - $ref: "#/parameters/ToPeriodQueryParam"
+        
+        - $ref: "#/parameters/FromCreatedAtQueryParam"
+        - $ref: "#/parameters/ToCreatedAtQueryParam"
+        
+        - $ref: "#/parameters/OrderByQueryParam"
+        - $ref: "#/parameters/SortOrderQueryParam"
+        
+        - $ref: "#/parameters/PageNumberQueryParam"
+        - $ref: "#/parameters/PageSizeQueryParam"
+        
+        
+      responses:
+        '200':
+          $ref: '#/responses/GetPaginationREUSResponseV1'
+        '400':
+          $ref: '#/responses/BadRequest'
+        '401':
+          $ref: '#/responses/Unauthorized'
+        '403':
+          $ref: '#/responses/Forbidden'
+        '404':
+          $ref: '#/responses/NotFound'
+        '500':
+          $ref: '#/responses/InternalServerError'
+    post:
+      tags:
+        - REUS
+      operationId: porCreatedREUSV1
+      summary: Creación de nuevo Período REUS
+      description: >
+        El siguiente recurso `POST` permite registrar un nuevo período de marcación REUS
+      parameters:
+        - $ref: "#/parameters/CreatedREUSBodyParam"
+      responses:
+        '201':
+          $ref: '#/responses/PostCreatedREUSPerioResponseV1'
+        '400':
+          $ref: '#/responses/BadRequest'
+        '401':
+          $ref: '#/responses/Unauthorized'
+        '403':
+          $ref: '#/responses/Forbidden'
+        '404':
+          $ref: '#/responses/NotFound'
+        '500':
+          $ref: '#/responses/InternalServerError'
+  /clientes/reus/{period}:
+    x-summary: /clientes/reus/{period}
+    parameters:
+      - $ref: '#/parameters/ChannelHeader'
+      - $ref: '#/parameters/UOHeader'
+      - $ref: '#/parameters/DataOriginHeader'
+      - $ref: '#/parameters/PeriodPath'
+    get:
+      tags:
+        - REUS
+      operationId: getREUSDetailByPeriodV1
+      summary: Detalle de Operación REUS.
+      description: |
+        Recupera el detalle de una operación REUS por periodo
+      responses:
+        '200':
+          $ref: '#/responses/GetREUSDetailByPeriodResponseV1'
+        '400':
+          $ref: '#/responses/BadRequest'
+        '401':
+          $ref: '#/responses/Unauthorized'
+        '403':
+          $ref: '#/responses/Forbidden'
+        '404':
+          $ref: '#/responses/NotFound'
+        '500':
+          $ref: '#/responses/InternalServerError'
+  /clientes/reus/{period}/logbook:
+    x-summary: /clientes/reus/{period}/logbook
+    parameters:
+      - $ref: '#/parameters/ChannelHeader'
+      - $ref: '#/parameters/UOHeader'
+      - $ref: '#/parameters/DataOriginHeader'
+      - $ref: '#/parameters/PeriodPath'
+    post:
+      tags:
+        - REUS
+      summary: Añade información a la bitacora de operación REUS
+      description: |
+        Añade información a la bitacora de operación REUS
+      parameters:
+        - $ref: '#/parameters/CreatedMarkLogbookREUSBody'
+      responses:
+        '204':
+          $ref: '#/responses/NoContent'
+        '400':
+          $ref: '#/responses/BadRequest'
+        '401':
+          $ref: '#/responses/Unauthorized'
+        '403':
+          $ref: '#/responses/Forbidden'
+        '404':
+          $ref: '#/responses/NotFound'
+        '500':
+          $ref: '#/responses/InternalServerError'
+  /clientes/reus/{period}/summary:
+    x-summary: /clientes/reus/{period}/summary
+    parameters:
+      - $ref: '#/parameters/ChannelHeader'
+      - $ref: '#/parameters/UOHeader'
+      - $ref: '#/parameters/DataOriginHeader'
+      - $ref: '#/parameters/PeriodPath'
+    post:
+      tags:
+        - REUS
+      summary: Actualiza el Resumen de Período REUS
+      description: |
+        Actualiza el Resumen de Período REUS
+      parameters:
+        - $ref: '#/parameters/CreatedSummaryREUSPeriodBody'
+      responses:
+        '204':
+          $ref: '#/responses/NoContent'
+        '400':
+          $ref: '#/responses/BadRequest'
+        '401':
+          $ref: '#/responses/Unauthorized'
+        '403':
+          $ref: '#/responses/Forbidden'
+        '404':
+          $ref: '#/responses/NotFound'
+        '500':
+          $ref: '#/responses/InternalServerError'
+  /clientes/report/reus:
+    x-summary: /clientes/report/reus
+    parameters:
+      - $ref: '#/parameters/ChannelHeader'
+      - $ref: '#/parameters/UOHeader'
+      - $ref: '#/parameters/DataOriginHeader'
+      - $ref: '#/parameters/ProductHeader'
+    get:
+      tags:
+        - Reporte REUS
+      operationId: getReportPaginationREUSV1
+      summary: Reporte de periodos de Marcación REUS.
+      description: >
+        Puede realizar una petición de tipo GET a https://dev.montepiedad.com.mx/clientes/repep, 
+        para recuperar un reporte de periodos REUS ejecutados.
+      parameters:
+      
+        - $ref: "#/parameters/MarkREUSTypeQueryParam"
+      
+        - $ref: "#/parameters/FromPeriodQueryParam"
+        - $ref: "#/parameters/ToPeriodQueryParam"
+        
+        - $ref: "#/parameters/FromCreatedAtQueryParam"
+        - $ref: "#/parameters/ToCreatedAtQueryParam"
+        
+        - $ref: "#/parameters/OrderByQueryParam"
+        - $ref: "#/parameters/SortOrderQueryParam"
+        
+      produces:
+        - application/pdf
+      responses:
+        '200':
+          $ref: '#/responses/GetReportPaginationREUSPeriodResponseV1'
+        '400':
+          $ref: '#/responses/BadRequest'
+        '401':
+          $ref: '#/responses/Unauthorized'
+        '403':
+          $ref: '#/responses/Forbidden'
+        '404':
+          $ref: '#/responses/NotFound'
+        '500':
+          $ref: '#/responses/InternalServerError'
+  /clientes/report/reus/{period}:
+    x-summary: /clientes/report/reus/{period}
+    parameters:
+      - $ref: '#/parameters/ChannelHeader'
+      - $ref: '#/parameters/UOHeader'
+      - $ref: '#/parameters/DataOriginHeader'
+      - $ref: '#/parameters/PeriodPath'
+    get:
+      tags:
+        - Reporte REUS
+      operationId: getPdfREUSDetailByPeriodV1
+      summary: Genera Reporte de Período REUS
+      description: |
+        Genera Reporte de Período REUS
+      produces:
+        - application/pdf
+        
+      parameters:
+        - $ref: "#/parameters/MarkREUSTypeQueryParam"
+      responses:
+        '200':
+          $ref: '#/responses/GetPDFREUSDetailByPeriodResponseV1'
+        '400':
+          $ref: '#/responses/BadRequest'
+        '401':
+          $ref: '#/responses/Unauthorized'
+        '403':
+          $ref: '#/responses/Forbidden'
+        '404':
+          $ref: '#/responses/NotFound'
+        '500':
+          $ref: '#/responses/InternalServerError'
+  /pre-registros:
+    x-summary: /pre-registros
+    parameters:
+      - $ref: "#/parameters/UOHeader"
+      - $ref: "#/parameters/ChannelHeader"
+      - $ref: "#/parameters/ProductHeader"
+      - $ref: "#/parameters/DataOriginHeader"
+    get:
+      tags: 
+        - Pre-Registro
+      operationId: getPaginationOfPreRegisterV1
+      summary: Paginación de pre-registros
+      description:  > 
+        
+      parameters:
+        - $ref: "#/parameters/OrderByQueryParam"
+        - $ref: "#/parameters/SortOrderQueryParam"
+        - $ref: "#/parameters/PageNumberQueryParam"
+        - $ref: "#/parameters/PageSizeQueryParam"
+      responses:
+        "200":
+          $ref: "#/responses/GetPaginationOfVerifyResponseV1"
+        "400":
+          $ref: "#/responses/BadRequest"
+        "401":
+          $ref: "#/responses/Unauthorized"
+        "403":
+          $ref: "#/responses/Forbidden"
+        "404":
+          $ref: "#/responses/NotFound"
+        "500":
+          $ref: "#/responses/InternalServerError"
+  /verificadores:
+    x-summary: /verificadores
+    parameters:
+      - $ref: "#/parameters/UOHeader"
+      - $ref: "#/parameters/ChannelHeader"
+      - $ref: "#/parameters/ProductHeader"
+      - $ref: "#/parameters/DataOriginHeader"
+    get:
+      tags: 
+        - Verificador
+      operationId: getPaginationOfVerificadorV1
+      summary: Paginación de verificadores
+      description:  > 
+        
+      parameters:
+        - $ref: "#/parameters/OrderByQueryParam"
+        - $ref: "#/parameters/SortOrderQueryParam"
+        - $ref: "#/parameters/PageNumberQueryParam"
+        - $ref: "#/parameters/PageSizeQueryParam"
+      responses:
+        "200":
+          $ref: "#/responses/GetPaginationOfVerifyResponseV1"
+        "400":
+          $ref: "#/responses/BadRequest"
+        "401":
+          $ref: "#/responses/Unauthorized"
+        "403":
+          $ref: "#/responses/Forbidden"
+        "404":
+          $ref: "#/responses/NotFound"
+        "500":
+          $ref: "#/responses/InternalServerError"
+    post:
+      tags: 
+        - Verificador
+      operationId: postCreatedVerifyV1
+      summary: Creación de verificador
+      description:  > 
+        El siguiente recurso `POST` permite crear un nuevo verificador. 
+      parameters:
+        - $ref: "#/parameters/CreatedVerifyBodyParam"
+      responses:
+        "201":
+          $ref: "#/responses/CreatedVerifyResponseV1"
+        "400":
+          $ref: "#/responses/BadRequest"
+        "401":
+          $ref: "#/responses/Unauthorized"
+        "403":
+          $ref: "#/responses/Forbidden"
+        "404":
+          $ref: "#/responses/NotFound"
+        "500":
+          $ref: "#/responses/InternalServerError"
+  /verificadores/{verifyId}:
+    x-summary: /verificadores/{verifyId}
+    parameters:
+      - $ref: "#/parameters/UOHeader"
+      - $ref: "#/parameters/ChannelHeader"
+      - $ref: "#/parameters/ProductHeader"
+      - $ref: "#/parameters/DataOriginHeader"
+      - $ref: "#/parameters/VerifyIdPath"
+    get:
+      tags: 
+        - Verificador
+      operationId: getVerifyDetailByIdV1
+      summary: Detalle de Documento
+      description:  > 
+        El siguiente recurso `GET` permite obtener el detalle de un documento 
+        por su identificador único de documento. 
+      responses:
+        "200":
+          $ref: "#/responses/GetVerifyDetailByIdResponseV1"
+        "400":
+          $ref: "#/responses/BadRequest"
+        "401":
+          $ref: "#/responses/Unauthorized"
+        "403":
+          $ref: "#/responses/Forbidden"
+        "404":
+          $ref: "#/responses/NotFound"
+        "500":
+          $ref: "#/responses/InternalServerError"
+    put:
+      tags: 
+        - Verificador
+      operationId: PutVerificadorDetailByIdV1
+      summary: Actualización de Documento
+      description:  > 
+        El siguiente recurso `PUT` permite un documento 
+        por su identificador único de documento. 
+      parameters:
+        - $ref: "#/parameters/PutVerifyBodyParam"
+      responses:
+        "200":
+          $ref: "#/responses/PutVerifyDetailByIdResponseV1"
+        "400":
+          $ref: "#/responses/BadRequest"
+        "401":
+          $ref: "#/responses/Unauthorized"
+        "403":
+          $ref: "#/responses/Forbidden"
+        "404":
+          $ref: "#/responses/NotFound"
+        "500":
+          $ref: "#/responses/InternalServerError"
+    delete:
+      tags: 
+        - Verificador
+      operationId: DeleteVerificadorDetailByIdV1
+      summary: Eliminación de Documento
+      description:  > 
+        El siguiente recurso `DELETE` permite eliminar un documento existente 
+        en el gestor documental por su identificador único de documento. 
+      responses:
+        "201":
+          $ref: "#/responses/NoContent"
+        "400":
+          $ref: "#/responses/BadRequest"
+        "401":
+          $ref: "#/responses/Unauthorized"
+        "403":
+          $ref: "#/responses/Forbidden"
+        "404":
+          $ref: "#/responses/NotFound"
+        "500":
+          $ref: "#/responses/InternalServerError"
+  /verificadores/desafio:
+    x-summary: /verificadores/desafio
+    parameters:
+      - $ref: '#/parameters/ChannelHeader'
+      - $ref: '#/parameters/UOHeader'
+      - $ref: '#/parameters/DataOriginHeader'
+      - $ref: '#/parameters/ProductHeader'
+    post:
+      tags:
+        - Verificador
+      operationId: postChallengeV1
+      summary: >-
+        Genera una verificación de segundo factor de atentificación por correo
+        electrónico o SMS.
+      description: >
+        Este recurso `POST` generar un desafío de segundo factor de
+        autentificación correo electrónico o SMS,  dependiendo de los siguientes
+        atributos:
+         - Unidad Organizacional
+         - Canal
+         - Producto
+         - Origen del Dato
+      parameters:
+        - $ref: '#/parameters/CreatedChallengeBody'
+      responses:
+        '204':
+          $ref: '#/responses/NoContent'
+        '400':
+          $ref: '#/responses/BadRequest'
+        '401':
+          $ref: '#/responses/Unauthorized'
+        '403':
+          $ref: '#/responses/Forbidden'
+        '404':
+          $ref: '#/responses/NotFound'
+        '500':
+          $ref: '#/responses/InternalServerError'
+  /verificadores/reenvio:
+    x-summary: /verificadores/reenvio
+    parameters:
+      - $ref: '#/parameters/ChannelHeader'
+      - $ref: '#/parameters/UOHeader'
+      - $ref: '#/parameters/DataOriginHeader'
+      - $ref: '#/parameters/ProductHeader'
+    post:
+      tags:
+        - Verificador
+      operationId: postForwardingV1
+      summary: >-
+        Reenvía una verificación de segundo factor de atentificación por correo
+        electrónico o SMS existente.
+      description: >
+        Este recurso `POST` reenvía una verificación un desafio de segundo
+        factor de autentificación por correo electrónico o SMS,  dependiendo de
+        los siguientes atributos:
+         - Unidad Organizacional
+         - Canal
+         - Producto
+         - Origen del Dato
+      parameters:
+        - $ref: '#/parameters/CreatedChallengeBody'
+      responses:
+        '204':
+          $ref: '#/responses/NoContent'
+        '400':
+          $ref: '#/responses/BadRequest'
+        '401':
+          $ref: '#/responses/Unauthorized'
+        '403':
+          $ref: '#/responses/Forbidden'
+        '404':
+          $ref: '#/responses/NotFound'
+        '500':
+          $ref: '#/responses/InternalServerError'
+  /verificadores/validar:
+    x-summary: /verificadores/validar
+    parameters:
+      - $ref: '#/parameters/ChannelHeader'
+      - $ref: '#/parameters/UOHeader'
+      - $ref: '#/parameters/DataOriginHeader'
+      - $ref: '#/parameters/ProductHeader'
+    post:
+      tags:
+        - Verificador
+      operationId: postValidateV1
+      summary: >-
+        Verifica una respuesta de segundo factor de atentificación por correo
+        electrónico o SMS.
+      description: >
+        Este recurso `POST` verifica una respuesta de segundo factor de
+        atentificación por correo electrónico o SMS
+      parameters:
+        - $ref: '#/parameters/ValidateChallengeBody'
+      responses:
+        '200':
+          $ref: '#/responses/ResponsePOSTValidateV1'
+        '400':
+          $ref: '#/responses/BadRequest'
+        '401':
+          $ref: '#/responses/Unauthorized'
+        '403':
+          $ref: '#/responses/Forbidden'
+        '404':
+          $ref: '#/responses/NotFound'
+        '500':
+          $ref: '#/responses/InternalServerError'
+
 definitions:
 
 ## Definicion de responses genericas
@@ -1912,7 +3291,56 @@ definitions:
           "action": "HIGT",
           "createdAt": "17-02-2021T09:43:00"
       }
-        
+
+## Metal Ajustado
+  
+  MetalAjustadoCommon:
+    allOf:
+    - $ref: '#/definitions/MetalAjustadoBase'
+    - type: object
+      required:
+      - fechaAjuste
+      - usuario
+      properties:
+        fechaAjuste:
+          type: string
+          description: Fecha y hora en la que se realiza la acción
+          format: timestamp
+          example: "2022-01-19T19:42:30"
+        usuario:
+          type: string
+          description: Usuario que solicita la acción. 
+          example: "mcgonzalez"
+  
+  MetalAjustadoBase:
+    type: object
+    required:
+    - metalAjustado
+    - fechaInicio
+    - fechaFin
+    properties:
+      metalAjustado:
+        type: string
+        description: Metal que será asginado al cliente para el proceso de empeño
+        enum:
+          - DIAMANTE
+          - PLATINO_MAS
+          - PLATINO
+          - ORO_MAS
+          - ORO
+          - PLATA
+          - BRONCE
+      fechaInicio:
+        type: string
+        description: Fecha en la que se dará incio a la vigencia del Metal Ajustado en formato `yyyy-mm-dd`
+        format: date
+        example: "2022-01-22"
+      fechaFin:
+        type: string
+        description: Fecha en la que finaliza la vigencia del Metal Ajustado en formato `yyyy-mm-dd`
+        format: date
+        example: "2022-01-28"
+
 responses:
 
 ## Response
@@ -2543,6 +3971,52 @@ responses:
     examples:
       application/pdf:
 
+## Metal Ajustado
+  CrearMetalAjustadoResponseBody:
+    description: 201 - Created
+    schema:
+      allOf:
+      - $ref: "#/definitions/GenericResponse"
+      - type: object
+        required:
+          - id
+        properties:
+          id: 
+            type: string
+            description: Identificador del registro generado 
+            example: "12342536786"
+  ActualizarMetalAjustadoResponseBody:
+    description: 200 - Ok
+    schema:
+      $ref: "#/definitions/GenericResponse"
+  ConsultarMetalAjustadoResponseBody:
+    description: 200 - Ok
+    schema:
+      type: array
+      items:
+        type: object
+        allOf:
+        - type: object
+          properties: 
+            idCliente:
+              description: Identificador único de Cliente asignado por CRM
+              type: number
+              format: int64
+              default: 10
+              example: "1435235234"
+            nombre: 
+              description: Nombre del cliente
+              type: string
+              example: "Pedro"
+            apellidoPaterno: 
+              description: Apellido paterno del cliente
+              type: string
+              example: "Perez"
+            apellidoMaterno: 
+              description: Apellido materno del cliente
+              type: string
+              example: "Prado"
+        - $ref: "#/definitions/MetalAjustadoBase"
 parameters:
   
 ## Header Params
@@ -2705,6 +4179,7 @@ parameters:
     type: boolean
     description: Indica si deben obtenerse los correos electrónicos asociados a un cliente.
     default: true
+
   
 ## Path Params
 
@@ -2764,6 +4239,15 @@ parameters:
       Identificador único del verificador generado en formato `ObjectId`
     type: string
     default: "60c8e52a219166f4c9f028bb"
+
+  ClientIdCRMPath:
+    in: path
+    name: clientIdCRM
+    required: true
+    description: Identificador único de Cliente asignado por CRM
+    type: number
+    format: int64
+    default: 10
 
 ## Body Param
 
@@ -2936,1276 +4420,10 @@ parameters:
     name: Summary REUS
     schema:
       $ref: '#/definitions/SummaryREUS'
-
-paths:
-
-  /clientes/busqueda:
-    x-summary: /clientes/busqueda
-    parameters:
-      - $ref: '#/parameters/ChannelHeader'
-      - $ref: '#/parameters/UOHeader'
-      - $ref: '#/parameters/DataOriginHeader'
-      - $ref: '#/parameters/ProductHeader'
-    get:
-      tags:
-        - Clientes
-      operationId: getExistsClientsByFilterV1
-      summary: Búsqueda de cliente existente
-      security:
-        - OAuth2: [getExistsClientsByFilterV1]
-      description: >
-        Este recurso `GET`, nos permite identificar si existe uno o más clientes
-        similares. Sin exponer la información personal del cliente, prospecto u
-        oportunidad. Los criterios de búsqueda son:
-          * Tipo de Persona
-          * Nombre (s) 
-          * Apellido Paterno
-          * Apellido Materno
-          * CURP
-          * RFC
-          * Fecha de Nacimiento en formato `yyyy-mm-dd`
-          * Télefono
-          * Correo electrónico
-          * Razón Social
-          * Unidad Organizacional
-          * Canal
-          * Origen del Dato
-          * Producto
-      parameters:
-        - $ref: "#/parameters/UOQueryParam"
-        - $ref: "#/parameters/ChannelQueryParam"
-        - $ref: "#/parameters/ProductQueryParam"
-        - $ref: "#/parameters/DataOriginQueryParam"
-        - in: query
-          name: tipoPersona
-          description: Tipo de persona ha búscar (Fisica o Moral)
-          type: string
-          format: uuid
-        - in: query
-          name: nombre
-          description: Nombre (s) del individuo a búscar
-          type: string
-        - in: query
-          name: apellidoPaterno
-          description: Apellido paterno del individuo a búscar
-          type: string
-        - in: query
-          name: apellidoMaterno
-          description: Apellido materno del individuo a búscar
-          type: string
-        - in: query
-          name: fechaNacimiento
-          description: Fecha de Nacimiento
-          type: string
-          format: date
-        - in: query
-          name: curp
-          description: Calve Única de Registro de Población
-          type: string
-        - in: query
-          name: rfc
-          description: Registro Federal de Contribuyentes
-          type: string
-        - in: query
-          name: telefono
-          description: Número de teléfono
-          type: string
-        - in: query
-          name: correo
-          description: Correo electrónico
-          type: string
-      responses:
-        '200':
-          $ref: '#/responses/ResponseGetExistsClientsByFilterV1'
-        '400':
-          $ref: '#/responses/BadRequest'
-        '401':
-          $ref: '#/responses/Unauthorized'
-        '403':
-          $ref: '#/responses/Forbidden'
-        '404':
-          $ref: '#/responses/NotFound'
-        '500':
-          $ref: '#/responses/InternalServerError'
-
-  /clientes/{clientId}/reus:
-    x-summary: /clientes/{clientId}/reus
-    parameters:
-      - $ref: '#/parameters/ChannelHeader'
-      - $ref: '#/parameters/UOHeader'
-      - $ref: '#/parameters/DataOriginHeader'
-      - $ref: '#/parameters/ProductHeader'
-      - $ref: '#/parameters/ClientIdPath'
-    get:
-      tags:
-        - Clientes REUS
-      operationId: getREUSDetailByClientIdV1
-      summary: Paginación REUS de un Cliente.
-      description:  >
-        Puede realizar una petición de tipo GET a https://dev.montepiedad.com.mx/clientes/{clientId}/reus, 
-        para recuperar todos los teléfonos y correos electrónicos asociados a un cliente.
-        
-        Ordenamiento ascendente por fecha de creación:
-          
-          `https://nmp.com.mx/clientes/{clientId}/reus?sortOrder=ACS&sortBy=createdAt`
-          
-          Ordenamiento descendente por fecha de creación:
-          
-          `https://nmp.com.mx/clientes/{clientId}/reus?sortOrder=DESC&sortBy=createdAt`
-      parameters:
-        
-        - $ref: "#/parameters/WithPhonesQueryParam"
-        - $ref: "#/parameters/WithEmailsQueryParam"
-        
-        - $ref: "#/parameters/FromCreatedAtQueryParam"
-        - $ref: "#/parameters/ToCreatedAtQueryParam"
-        
-        - $ref: "#/parameters/SortOrderQueryParam"
-          
-      responses:
-        '200':
-          $ref: '#/responses/GetReusByClientIdResponseV1'
-        '400':
-          $ref: '#/responses/BadRequest'
-        '401':
-          $ref: '#/responses/Unauthorized'
-        '403':
-          $ref: '#/responses/Forbidden'
-        '404':
-          $ref: '#/responses/NotFound'
-        '500':
-          $ref: '#/responses/InternalServerError'
-
-  /clientes/{clientId}/reus/report:
-    x-summary: /clientes/{clientId}/reus/report
-    parameters:
-      - $ref: '#/parameters/ChannelHeader'
-      - $ref: '#/parameters/UOHeader'
-      - $ref: '#/parameters/DataOriginHeader'
-      - $ref: '#/parameters/ProductHeader'
-      - $ref: '#/parameters/ClientIdPath'
-    get:
-      tags:
-        - Clientes REUS
-      operationId: getPDFREUSByClientIdV1
-      summary: Reporte de Marcación REUS de un Cliente.
-      description: |
-        Genera el reporte en formato PDF de la Marcación REUS de un Cliente.
-      parameters:
-        - $ref: "#/parameters/WithPhonesQueryParam"
-        - $ref: "#/parameters/WithEmailsQueryParam"
-      produces:
-        - application/pdf
-      responses:
-        '200':
-          $ref: '#/responses/GetPDFReusByClientIdResponseV1'
-        '400':
-          $ref: '#/responses/BadRequest'
-        '401':
-          $ref: '#/responses/Unauthorized'
-        '403':
-          $ref: '#/responses/Forbidden'
-        '404':
-          $ref: '#/responses/NotFound'
-        '500':
-          $ref: '#/responses/InternalServerError'
-
-  /clientes/{clientId}/repep:
-    x-summary: /clientes/{clientId}/repep
-    parameters:
-      - $ref: '#/parameters/ChannelHeader'
-      - $ref: '#/parameters/UOHeader'
-      - $ref: '#/parameters/DataOriginHeader'
-      - $ref: '#/parameters/ProductHeader'
       
-      - $ref: '#/parameters/ClientIdPath'
-    get:
-      tags:
-        - Clientes REPEP
-      operationId: getREPEPDetailByClientIdV1
-      summary: Paginación REPEP de un Cliente.
-      description: >
-        Puede realizar una petición de tipo GET a https://dev.montepiedad.com.mx/clientes/{clientId}/repep, 
-        para recuperar todos los teléfonos asociados aun cliente.
-        
-        Por defecto recuperará los primeros 20 elementos (máximo 30), algunos ejemplos:
-          
-          Ordenamiento ascendente por fecha de creación:
-          
-          `https://nmp.com.mx/clientes/{clientId}/repep?sortOrder=ACS&sortBy=createdAt`
-          
-          Ordenamiento descendente por fecha de creación:
-          
-          `https://nmp.com.mx/clientes/{clientId}/repep?sortOrder=DESC&sortBy=createdAt`
-      parameters:
-        
-        - $ref: "#/parameters/FromCreatedAtQueryParam"
-        - $ref: "#/parameters/ToCreatedAtQueryParam"
-        
-        - $ref: "#/parameters/OrderByQueryParam"
-        - $ref: "#/parameters/SortOrderQueryParam"
-        
-      responses:
-        '200':
-          $ref: '#/responses/GetREPEPByClientIdResponseV1'
-        '400':
-          $ref: '#/responses/BadRequest'
-        '401':
-          $ref: '#/responses/Unauthorized'
-        '403':
-          $ref: '#/responses/Forbidden'
-        '404':
-          $ref: '#/responses/NotFound'
-        '500':
-          $ref: '#/responses/InternalServerError'
-
-  /clientes/{clientId}/repep/report:
-    x-summary: /clientes/{clientId}/repep/report
-    parameters:
-      - $ref: '#/parameters/ChannelHeader'
-      - $ref: '#/parameters/UOHeader'
-      - $ref: '#/parameters/DataOriginHeader'
-      - $ref: '#/parameters/ProductHeader'
-      - $ref: '#/parameters/ClientIdPath'
-    get:
-      tags:
-        - Clientes REPEP
-      operationId: getPDFREPEPByClientIdV1
-      summary: Genera el reporte en formato PDF de la marcación REPEP de un cliente.
-      description: |
-          Genera el reporte en formato PDF de la marcación REPEP de un cliente.
-      produces:
-        - application/pdf
-      responses:
-        '200':
-          $ref: '#/responses/ResponseGetReportRepepByClientIdV1'
-        '400':
-          $ref: '#/responses/BadRequest'
-        '401':
-          $ref: '#/responses/Unauthorized'
-        '403':
-          $ref: '#/responses/Forbidden'
-        '404':
-          $ref: '#/responses/NotFound'
-        '500':
-          $ref: '#/responses/InternalServerError'
-
-  /clientes/{clientId}/telefonos/{phoneNumber}/repep:
-    x-summary: /clientes/{clientId}/telefonos/{phoneNumber}/repep
-    parameters:
-      - $ref: '#/parameters/ChannelHeader'
-      - $ref: '#/parameters/UOHeader'
-      - $ref: '#/parameters/DataOriginHeader'
-      - $ref: '#/parameters/ProductHeader'
-      - $ref: '#/parameters/ClientIdPath'
-      - $ref: '#/parameters/PhoneNumberPath'
-    get:
-      tags:
-        - Cliente Teléfonos
-      operationId: getREPEPByClientIdAndPhoneNumberV1
-      summary: >
-        Resumen de marcación REPEP.
-      description: |
-         Consulta la marcación REPEP de un cliente, por número de telefono.
-      responses:
-        '200':
-          $ref: '#/responses/ResponseGetRepepByClientIdAndPhoneNumberV1'
-        '400':
-          $ref: '#/responses/BadRequest'
-        '401':
-          $ref: '#/responses/Unauthorized'
-        '403':
-          $ref: '#/responses/Forbidden'
-        '404':
-          $ref: '#/responses/NotFound'
-        '500':
-          $ref: '#/responses/InternalServerError'
-    post:
-      tags:
-        - Cliente Teléfonos
-      operationId: postREPEPByClientIdAndPhoneNumberV1
-      summary:  Actualiza la marcación REPEP de un cliente, por número de telefono.
-      description: |
-         Actualiza la marcación REPEP de un cliente, por número de telefono.
-      parameters:
-        - $ref: '#/parameters/CreatedSummaryREPEPBody'
-      responses:
-        '201':
-          $ref: '#/responses/ResponsePostRepepByClientIdAndPhoneNumberV1'
-        '400':
-          $ref: '#/responses/BadRequest'
-        '401':
-          $ref: '#/responses/Unauthorized'
-        '403':
-          $ref: '#/responses/Forbidden'
-        '404':
-          $ref: '#/responses/NotFound'
-        '500':
-          $ref: '#/responses/InternalServerError'
-
-  /clientes/{clientId}/telefonos/{phoneNumber}/repep/report:
-    x-summary: /clientes/{clientId}/telefonos/{phoneNumber}/repep/report
-    parameters:
-      - $ref: '#/parameters/ChannelHeader'
-      - $ref: '#/parameters/UOHeader'
-      - $ref: '#/parameters/DataOriginHeader'
-      - $ref: '#/parameters/ProductHeader'
-      - $ref: '#/parameters/ClientIdPath'
-      - $ref: '#/parameters/PhoneNumberPath'
-    get:
-      tags:
-        - Cliente Teléfonos
-      operationId: getPDFREPEPByClientIdAndPhoneNumberV1
-      summary: Genera el reporte en formato PDF de la marcación REPEP de un cliente, por número de telefono.
-      description: |
-          Genera el reporte en formato PDF de la marcación REPEP de un cliente, por número de telefono.
-      produces:
-        - application/pdf
-      responses:
-        '200':
-          $ref: '#/responses/ResponseGetReportRepepByClientIdAndPhoneNumberV1'
-        '400':
-          $ref: '#/responses/BadRequest'
-        '401':
-          $ref: '#/responses/Unauthorized'
-        '403':
-          $ref: '#/responses/Forbidden'
-        '404':
-          $ref: '#/responses/NotFound'
-        '500':
-          $ref: '#/responses/InternalServerError'
-  
-  /clientes/{clientId}/telefonos/{phoneNumber}/reus:
-    x-summary: /clientes/{clientId}/telefonos/{phoneNumber}/reus
-    parameters:
-      - $ref: '#/parameters/ChannelHeader'
-      - $ref: '#/parameters/UOHeader'
-      - $ref: '#/parameters/DataOriginHeader'
-      - $ref: '#/parameters/ProductHeader'
-      - $ref: '#/parameters/ClientIdPath'
-      - $ref: '#/parameters/PhoneNumberPath'
-    get:
-      tags:
-        - Cliente Teléfonos
-      operationId: getREUSByClientIdAndPhoneNumberV1
-      summary: Consulta la marcación REUS de un cliente, por número de telefono.
-      description: |
-         Consulta la marcación REUS de un cliente, por número de telefono.
-      responses:
-        '200':
-          $ref: '#/responses/ResponseGetReusByClientIdAndPhoneNumberV1'
-        '400':
-          $ref: '#/responses/BadRequest'
-        '401':
-          $ref: '#/responses/Unauthorized'
-        '403':
-          $ref: '#/responses/Forbidden'
-        '404':
-          $ref: '#/responses/NotFound'
-        '500':
-          $ref: '#/responses/InternalServerError'
-    post:
-      tags:
-        - Cliente Teléfonos
-      operationId: postREUSByClientIdAndPhoneNumberV1
-      summary:  Actualiza la marcación REUS de un cliente, por número de telefono.
-      description: |
-         Actualiza la marcación REUS de un cliente, por número de telefono.
-      parameters:
-        - $ref: '#/parameters/CreatedSummaryREUSBody'
-      responses:
-        '201':
-          $ref: '#/responses/ResponsePostReusByClientIdAndPhoneNumberV1'
-        '400':
-          $ref: '#/responses/BadRequest'
-        '401':
-          $ref: '#/responses/Unauthorized'
-        '403':
-          $ref: '#/responses/Forbidden'
-        '404':
-          $ref: '#/responses/NotFound'
-        '500':
-          $ref: '#/responses/InternalServerError'
-          
-  /clientes/{clientId}/telefonos/{phoneNumber}/reus/report:
-    x-summary: /clientes/{clientId}/telefonos/{phoneNumber}/reus/report
-    parameters:
-      - $ref: '#/parameters/ChannelHeader'
-      - $ref: '#/parameters/UOHeader'
-      - $ref: '#/parameters/DataOriginHeader'
-      - $ref: '#/parameters/ProductHeader'
-      - $ref: '#/parameters/ClientIdPath'
-      - $ref: '#/parameters/PhoneNumberPath'
-    get:
-      tags:
-        - Cliente Teléfonos
-      operationId: getPdfREUSByClientIdAndPhoneNumberV1
-      summary: Reporte en marcación REUS por número de teléfono.
-      description: |
-         Reporte en marcación REUS por número de teléfono.
-      produces:
-        - application/pdf
-      responses:
-        '200':
-          $ref: '#/responses/ResponseGetPdfReusByClientIdAndPhoneNumberV1'
-        '400':
-          $ref: '#/responses/BadRequest'
-        '401':
-          $ref: '#/responses/Unauthorized'
-        '403':
-          $ref: '#/responses/Forbidden'
-        '404':
-          $ref: '#/responses/NotFound'
-        '500':
-          $ref: '#/responses/InternalServerError'
-  
-  /clientes/{clientId}/correos/{email}/reus:
-    x-summary: /clientes/{clientId}/correos/{email}/reus
-    parameters:
-      - $ref: '#/parameters/ChannelHeader'
-      - $ref: '#/parameters/UOHeader'
-      - $ref: '#/parameters/DataOriginHeader'
-      - $ref: '#/parameters/ProductHeader'
-      - $ref: '#/parameters/ClientIdPath'
-      - $ref: '#/parameters/EmailIdNumberPath'
-    get:
-      tags:
-        - Cliente Correos
-      operationId: getREUSByClientIdAndEmailNumberV1
-      summary: Consulta la marcación REUS de un cliente, por correo electrónico.
-      description: |
-         Consulta la marcación REUS de un cliente, por correo electrónico.
-      responses:
-        '200':
-          $ref: '#/responses/ResponseGetReusByClientIdAndEmailV1'
-        '400':
-          $ref: '#/responses/BadRequest'
-        '401':
-          $ref: '#/responses/Unauthorized'
-        '403':
-          $ref: '#/responses/Forbidden'
-        '404':
-          $ref: '#/responses/NotFound'
-        '500':
-          $ref: '#/responses/InternalServerError'
-    post:
-      tags:
-        - Cliente Correo
-      operationId: postREUSByClientIdAndEmailV1
-      summary:  Actualiza la marcación REUS de un cliente, por correo electrónico.
-      description: |
-         Actualiza la marcación REUS de un cliente, por correo electrónico.
-      parameters:
-        - $ref: '#/parameters/CreatedSummaryREUSBody'
-      responses:
-        '201':
-          $ref: '#/responses/ResponsePostReusByClientIdAndEmailV1'
-        '400':
-          $ref: '#/responses/BadRequest'
-        '401':
-          $ref: '#/responses/Unauthorized'
-        '403':
-          $ref: '#/responses/Forbidden'
-        '404':
-          $ref: '#/responses/NotFound'
-        '500':
-          $ref: '#/responses/InternalServerError'
-  
-  /clientes/{clientId}/correos/{email}/reus/report:
-    x-summary: /clientes/{clientId}/correos/{email}/reus/report
-    parameters:
-      - $ref: '#/parameters/ChannelHeader'
-      - $ref: '#/parameters/UOHeader'
-      - $ref: '#/parameters/DataOriginHeader'
-      - $ref: '#/parameters/ProductHeader'
-      - $ref: '#/parameters/ClientIdPath'
-      - $ref: '#/parameters/EmailIdNumberPath'
-    get:
-      tags:
-        - Cliente Correos
-      operationId: getPdfREUSByClientIdAndEmailV1
-      summary: Reporte en marcación REUS por correo electrónico.
-      description: |
-         Reporte en marcación REUS por correo electrónico.
-      produces:
-        - application/pdf
-      responses:
-        '200':
-          $ref: '#/responses/ResponseGetPdfReusByClientIdAndEmailV1'
-        '400':
-          $ref: '#/responses/BadRequest'
-        '401':
-          $ref: '#/responses/Unauthorized'
-        '403':
-          $ref: '#/responses/Forbidden'
-        '404':
-          $ref: '#/responses/NotFound'
-        '500':
-          $ref: '#/responses/InternalServerError'
-    
-  /clientes/repep:
-    x-summary: /clientes/repep
-    parameters:
-      - $ref: '#/parameters/ChannelHeader'
-      - $ref: '#/parameters/UOHeader'
-      - $ref: '#/parameters/DataOriginHeader'
-      - $ref: '#/parameters/ProductHeader'
-    get:
-      tags:
-        - REPEP
-      operationId: getPaginationOfREPEPV1
-      summary: Paginación de Marcación REPEP.
-      description: >
-        Puede realizar una petición de tipo GET a https://dev.montepiedad.com.mx/clientes/repep, 
-        para recuperar todas los periodos REPEP ejecutados.
-        
-        Por defecto recuperará los primeros 20 elementos (máximo 30), algunos ejemplos:
-          
-          Primeros 30 elementos:
-          `https://nmp.com.mx/clientes/repep?pageNumber=0&pageSize=30`
-          
-          Siguientes 30 elementos:
-          `https://nmp.com.mx/clientes/repep?pageNumber=1&pageSize=30`
-          
-          Últimos 20 elementos:
-          `https://nmp.com.mx/clientes/repep?pageNumber=2&pageSize=30`
-          
-          Ordenamiento ascendente por fecha de creación:
-          
-          `https://nmp.com.mx/clientes/repep?sortOrder=ACS&sortBy=createdAt`
-          
-          Ordenamiento descendente por fecha de creación:
-          
-          `https://nmp.com.mx/clientes/repep?sortOrder=DESC&sortBy=createdAt`
-      parameters:
-        
-        - $ref: "#/parameters/FromPeriodQueryParam"
-        - $ref: "#/parameters/ToPeriodQueryParam"
-        
-        - $ref: "#/parameters/FromCreatedAtQueryParam"
-        - $ref: "#/parameters/ToCreatedAtQueryParam"
-        
-        - $ref: "#/parameters/OrderByQueryParam"
-        - $ref: "#/parameters/SortOrderQueryParam"
-        
-        - $ref: "#/parameters/PageNumberQueryParam"
-        - $ref: "#/parameters/PageSizeQueryParam"
-        
-      security:
-        - OAuth2: [getPaginationOfREPEPV1]
-      responses:
-        '200':
-          $ref: '#/responses/GetPaginationREPEPResponseV1'
-        '400':
-          $ref: '#/responses/BadRequest'
-        '401':
-          $ref: '#/responses/Unauthorized'
-        '403':
-          $ref: '#/responses/Forbidden'
-        '404':
-          $ref: '#/responses/NotFound'
-        '500':
-          $ref: '#/responses/InternalServerError'
-    post:
-      tags:
-        - REPEP
-      operationId: postCreatedREPEPV1
-      summary: Creación de Período REPEP.
-      description: |
-        Esta operación permite crear un nuevo período de marcación REPEP
-      security:
-        - OAuth2: [postCreatedREPEPV1]
-      parameters:
-        - $ref: '#/parameters/CreatedREPEPPeriodBody'
-      responses:
-        '201':
-          $ref: '#/responses/PostCreatedREPEPPerioResponseV1'
-        '400':
-          $ref: '#/responses/BadRequest'
-        '401':
-          $ref: '#/responses/Unauthorized'
-        '403':
-          $ref: '#/responses/Forbidden'
-        '404':
-          $ref: '#/responses/NotFound'
-        '500':
-          $ref: '#/responses/InternalServerError'
-          
-  /clientes/repep/{period}:
-    x-summary: /clientes/repep/{period}
-    parameters:
-      - $ref: '#/parameters/ChannelHeader'
-      - $ref: '#/parameters/UOHeader'
-      - $ref: '#/parameters/DataOriginHeader'
-      - $ref: '#/parameters/PeriodPath'
-    get:
-      tags:
-        - REPEP
-      operationId: getREPEPDetailByPeriodV1
-      summary: Detalle de Operación REPEP.
-      description: |
-        Recupera el detalle de una operación REPEP por periodo
-      responses:
-        '200':
-          $ref: '#/responses/GetREPEPPeriodDetailByPeriodResponseV1'
-        '400':
-          $ref: '#/responses/BadRequest'
-        '401':
-          $ref: '#/responses/Unauthorized'
-        '403':
-          $ref: '#/responses/Forbidden'
-        '404':
-          $ref: '#/responses/NotFound'
-        '500':
-          $ref: '#/responses/InternalServerError'
-
-  /clientes/repep/{period}/logbook:
-    x-summary: /clientes/repep/{period}/logbook
-    parameters:
-      - $ref: '#/parameters/ChannelHeader'
-      - $ref: '#/parameters/UOHeader'
-      - $ref: '#/parameters/DataOriginHeader'
-      - $ref: '#/parameters/PeriodPath'
-    post:
-      tags:
-        - REPEP
-      summary: Añade información a la bitacora de operación REPEP
-      description: |
-        Añade información a la bitacora de operación REPEP
-      parameters:
-        - $ref: '#/parameters/CreatedMarkLogbookREPEPBody'
-      responses:
-        '204':
-          $ref: '#/responses/NoContent'
-        '400':
-          $ref: '#/responses/BadRequest'
-        '401':
-          $ref: '#/responses/Unauthorized'
-        '403':
-          $ref: '#/responses/Forbidden'
-        '404':
-          $ref: '#/responses/NotFound'
-        '500':
-          $ref: '#/responses/InternalServerError'
-
-  /clientes/repep/{period}/summary:
-    x-summary: /clientes/repep/{period}/summary
-    parameters:
-      - $ref: '#/parameters/ChannelHeader'
-      - $ref: '#/parameters/UOHeader'
-      - $ref: '#/parameters/DataOriginHeader'
-      - $ref: '#/parameters/PeriodPath'
-    post:
-      tags:
-        - REPEP
-      summary: Actualiza el Resumen de Período REPEP
-      description: |
-        Actualiza el Resumen de Período REPEP
-      parameters:
-        - $ref: '#/parameters/CreatedSummaryREPEPPeriodBody'
-      responses:
-        '204':
-          $ref: '#/responses/NoContent'
-        '400':
-          $ref: '#/responses/BadRequest'
-        '401':
-          $ref: '#/responses/Unauthorized'
-        '403':
-          $ref: '#/responses/Forbidden'
-        '404':
-          $ref: '#/responses/NotFound'
-        '500':
-          $ref: '#/responses/InternalServerError'
-
-  /clientes/report/repep:
-    x-summary: /clientes/report/repep
-    parameters:
-      - $ref: '#/parameters/ChannelHeader'
-      - $ref: '#/parameters/UOHeader'
-      - $ref: '#/parameters/DataOriginHeader'
-      - $ref: '#/parameters/ProductHeader'
-    get:
-      tags:
-        - Reporte REPEP
-      operationId: getPdfPaginationOfREPEV1
-      summary: Geración de Historico de Marcación REPEP.
-      description: >
-        Puede realizar una petición de tipo GET a https://dev.montepiedad.com.mx/clientes/repep/report, 
-        para recuperar todas los periodos REPEP ejecutados en un Reporte PDF.
-        
-        > Ordenamiento ascendente por fecha de creación:
-          
-          `https://nmp.com.mx/clientes/repep/report?sortOrder=ACS&sortBy=createdAt`
-          
-        > Ordenamiento descendente por fecha de creación:
-          
-          `https://nmp.com.mx/clientes/repep/report?sortOrder=DESC&sortBy=createdAt`
-      parameters:
-        - $ref: "#/parameters/FromPeriodQueryParam"
-        - $ref: "#/parameters/ToPeriodQueryParam"
-        
-        - $ref: "#/parameters/FromCreatedAtQueryParam"
-        - $ref: "#/parameters/ToCreatedAtQueryParam"
-        
-        - $ref: "#/parameters/OrderByQueryParam"
-        - $ref: "#/parameters/SortOrderQueryParam"
-      security:
-        - OAuth2: [getPaginationOfREPEPV1]
-      produces:
-        - application/pdf
-      responses:
-        '200':
-          $ref: '#/responses/GetPdfPaginationREPEPResponseV1'
-        '400':
-          $ref: '#/responses/BadRequest'
-        '401':
-          $ref: '#/responses/Unauthorized'
-        '403':
-          $ref: '#/responses/Forbidden'
-        '404':
-          $ref: '#/responses/NotFound'
-        '500':
-          $ref: '#/responses/InternalServerError'
-
-  /clientes/report/repep/{period}:
-    x-summary: /clientes/report/repep/{period}
-    parameters:
-      - $ref: '#/parameters/ChannelHeader'
-      - $ref: '#/parameters/UOHeader'
-      - $ref: '#/parameters/DataOriginHeader'
-      - $ref: '#/parameters/PeriodPath'
-    get:
-      tags:
-        - Reporte REPEP
-      operationId: getPdfREPEPDetailByPeriodV1
-      summary: Genera Reporte de Período REPEP
-      description: |
-        Genera Reporte de Período REPEP en formato PDF
-      produces:
-        - application/pdf
-      responses:
-        '200':
-          $ref: '#/responses/GetReportREPEPDetailByPeriodResponseV1'
-        '400':
-          $ref: '#/responses/BadRequest'
-        '401':
-          $ref: '#/responses/Unauthorized'
-        '403':
-          $ref: '#/responses/Forbidden'
-        '404':
-          $ref: '#/responses/NotFound'
-        '500':
-          $ref: '#/responses/InternalServerError'
-          
-  /clientes/reus:
-    x-summary: /clientes/reus
-    parameters:
-      - $ref: '#/parameters/ChannelHeader'
-      - $ref: '#/parameters/UOHeader'
-      - $ref: '#/parameters/DataOriginHeader'
-      - $ref: '#/parameters/ProductHeader'
-    get:
-      tags:
-        - REUS
-      operationId: getPaginationREUSV1
-      summary: Paginación de Marcación REUS.
-      description: >
-        Puede realizar una petición de tipo GET a https://dev.montepiedad.com.mx/clientes/reus, 
-        para recuperar todas los periodos REUS ejecutados.
-        
-        Por defecto recuperará los primeros 20 elementos (máximo 30), algunos ejemplos:
-          
-          Primeros 30 elementos:
-          `https://nmp.com.mx/clientes/reus?pageNumber=0&pageSize=30`
-          
-          Siguientes 30 elementos:
-          `https://nmp.com.mx/clientes/reus?pageNumber=1&pageSize=30`
-          
-          Últimos 20 elementos:
-          `https://nmp.com.mx/clientes/reus?pageNumber=2&pageSize=30`
-      parameters:
-        
-        - $ref: "#/parameters/MarkREUSTypeQueryParam"
-        
-        - $ref: "#/parameters/FromPeriodQueryParam"
-        - $ref: "#/parameters/ToPeriodQueryParam"
-        
-        - $ref: "#/parameters/FromCreatedAtQueryParam"
-        - $ref: "#/parameters/ToCreatedAtQueryParam"
-        
-        - $ref: "#/parameters/OrderByQueryParam"
-        - $ref: "#/parameters/SortOrderQueryParam"
-        
-        - $ref: "#/parameters/PageNumberQueryParam"
-        - $ref: "#/parameters/PageSizeQueryParam"
-        
-        
-      responses:
-        '200':
-          $ref: '#/responses/GetPaginationREUSResponseV1'
-        '400':
-          $ref: '#/responses/BadRequest'
-        '401':
-          $ref: '#/responses/Unauthorized'
-        '403':
-          $ref: '#/responses/Forbidden'
-        '404':
-          $ref: '#/responses/NotFound'
-        '500':
-          $ref: '#/responses/InternalServerError'
-    post:
-      tags:
-        - REUS
-      operationId: porCreatedREUSV1
-      summary: Creación de nuevo Período REUS
-      description: >
-        El siguiente recurso `POST` permite registrar un nuevo período de marcación REUS
-      parameters:
-        - $ref: "#/parameters/CreatedREUSBodyParam"
-      responses:
-        '201':
-          $ref: '#/responses/PostCreatedREUSPerioResponseV1'
-        '400':
-          $ref: '#/responses/BadRequest'
-        '401':
-          $ref: '#/responses/Unauthorized'
-        '403':
-          $ref: '#/responses/Forbidden'
-        '404':
-          $ref: '#/responses/NotFound'
-        '500':
-          $ref: '#/responses/InternalServerError'
-  
-  /clientes/reus/{period}:
-    x-summary: /clientes/reus/{period}
-    parameters:
-      - $ref: '#/parameters/ChannelHeader'
-      - $ref: '#/parameters/UOHeader'
-      - $ref: '#/parameters/DataOriginHeader'
-      - $ref: '#/parameters/PeriodPath'
-    get:
-      tags:
-        - REUS
-      operationId: getREUSDetailByPeriodV1
-      summary: Detalle de Operación REUS.
-      description: |
-        Recupera el detalle de una operación REUS por periodo
-      responses:
-        '200':
-          $ref: '#/responses/GetREUSDetailByPeriodResponseV1'
-        '400':
-          $ref: '#/responses/BadRequest'
-        '401':
-          $ref: '#/responses/Unauthorized'
-        '403':
-          $ref: '#/responses/Forbidden'
-        '404':
-          $ref: '#/responses/NotFound'
-        '500':
-          $ref: '#/responses/InternalServerError'
-
-  /clientes/reus/{period}/logbook:
-    x-summary: /clientes/reus/{period}/logbook
-    parameters:
-      - $ref: '#/parameters/ChannelHeader'
-      - $ref: '#/parameters/UOHeader'
-      - $ref: '#/parameters/DataOriginHeader'
-      - $ref: '#/parameters/PeriodPath'
-    post:
-      tags:
-        - REUS
-      summary: Añade información a la bitacora de operación REUS
-      description: |
-        Añade información a la bitacora de operación REUS
-      parameters:
-        - $ref: '#/parameters/CreatedMarkLogbookREUSBody'
-      responses:
-        '204':
-          $ref: '#/responses/NoContent'
-        '400':
-          $ref: '#/responses/BadRequest'
-        '401':
-          $ref: '#/responses/Unauthorized'
-        '403':
-          $ref: '#/responses/Forbidden'
-        '404':
-          $ref: '#/responses/NotFound'
-        '500':
-          $ref: '#/responses/InternalServerError'
-
-  /clientes/reus/{period}/summary:
-    x-summary: /clientes/reus/{period}/summary
-    parameters:
-      - $ref: '#/parameters/ChannelHeader'
-      - $ref: '#/parameters/UOHeader'
-      - $ref: '#/parameters/DataOriginHeader'
-      - $ref: '#/parameters/PeriodPath'
-    post:
-      tags:
-        - REUS
-      summary: Actualiza el Resumen de Período REUS
-      description: |
-        Actualiza el Resumen de Período REUS
-      parameters:
-        - $ref: '#/parameters/CreatedSummaryREUSPeriodBody'
-      responses:
-        '204':
-          $ref: '#/responses/NoContent'
-        '400':
-          $ref: '#/responses/BadRequest'
-        '401':
-          $ref: '#/responses/Unauthorized'
-        '403':
-          $ref: '#/responses/Forbidden'
-        '404':
-          $ref: '#/responses/NotFound'
-        '500':
-          $ref: '#/responses/InternalServerError'
-
-  /clientes/report/reus:
-    x-summary: /clientes/report/reus
-    parameters:
-      - $ref: '#/parameters/ChannelHeader'
-      - $ref: '#/parameters/UOHeader'
-      - $ref: '#/parameters/DataOriginHeader'
-      - $ref: '#/parameters/ProductHeader'
-    get:
-      tags:
-        - Reporte REUS
-      operationId: getReportPaginationREUSV1
-      summary: Reporte de periodos de Marcación REUS.
-      description: >
-        Puede realizar una petición de tipo GET a https://dev.montepiedad.com.mx/clientes/repep, 
-        para recuperar un reporte de periodos REUS ejecutados.
-      parameters:
-      
-        - $ref: "#/parameters/MarkREUSTypeQueryParam"
-      
-        - $ref: "#/parameters/FromPeriodQueryParam"
-        - $ref: "#/parameters/ToPeriodQueryParam"
-        
-        - $ref: "#/parameters/FromCreatedAtQueryParam"
-        - $ref: "#/parameters/ToCreatedAtQueryParam"
-        
-        - $ref: "#/parameters/OrderByQueryParam"
-        - $ref: "#/parameters/SortOrderQueryParam"
-        
-      produces:
-        - application/pdf
-      responses:
-        '200':
-          $ref: '#/responses/GetReportPaginationREUSPeriodResponseV1'
-        '400':
-          $ref: '#/responses/BadRequest'
-        '401':
-          $ref: '#/responses/Unauthorized'
-        '403':
-          $ref: '#/responses/Forbidden'
-        '404':
-          $ref: '#/responses/NotFound'
-        '500':
-          $ref: '#/responses/InternalServerError'
-
-  /clientes/report/reus/{period}:
-    x-summary: /clientes/report/reus/{period}
-    parameters:
-      - $ref: '#/parameters/ChannelHeader'
-      - $ref: '#/parameters/UOHeader'
-      - $ref: '#/parameters/DataOriginHeader'
-      - $ref: '#/parameters/PeriodPath'
-    get:
-      tags:
-        - Reporte REUS
-      operationId: getPdfREUSDetailByPeriodV1
-      summary: Genera Reporte de Período REUS
-      description: |
-        Genera Reporte de Período REUS
-      produces:
-        - application/pdf
-        
-      parameters:
-        - $ref: "#/parameters/MarkREUSTypeQueryParam"
-      responses:
-        '200':
-          $ref: '#/responses/GetPDFREUSDetailByPeriodResponseV1'
-        '400':
-          $ref: '#/responses/BadRequest'
-        '401':
-          $ref: '#/responses/Unauthorized'
-        '403':
-          $ref: '#/responses/Forbidden'
-        '404':
-          $ref: '#/responses/NotFound'
-        '500':
-          $ref: '#/responses/InternalServerError'
-  
-  /pre-registros:
-    x-summary: /pre-registros
-    parameters:
-      - $ref: "#/parameters/UOHeader"
-      - $ref: "#/parameters/ChannelHeader"
-      - $ref: "#/parameters/ProductHeader"
-      - $ref: "#/parameters/DataOriginHeader"
-    get:
-      tags: 
-        - Pre-Registro
-      operationId: getPaginationOfPreRegisterV1
-      summary: Paginación de pre-registros
-      description:  > 
-        
-      parameters:
-        - $ref: "#/parameters/OrderByQueryParam"
-        - $ref: "#/parameters/SortOrderQueryParam"
-        - $ref: "#/parameters/PageNumberQueryParam"
-        - $ref: "#/parameters/PageSizeQueryParam"
-      responses:
-        "200":
-          $ref: "#/responses/GetPaginationOfVerifyResponseV1"
-        "400":
-          $ref: "#/responses/BadRequest"
-        "401":
-          $ref: "#/responses/Unauthorized"
-        "403":
-          $ref: "#/responses/Forbidden"
-        "404":
-          $ref: "#/responses/NotFound"
-        "500":
-          $ref: "#/responses/InternalServerError"
-  
-  /verificadores:
-    x-summary: /verificadores
-    parameters:
-      - $ref: "#/parameters/UOHeader"
-      - $ref: "#/parameters/ChannelHeader"
-      - $ref: "#/parameters/ProductHeader"
-      - $ref: "#/parameters/DataOriginHeader"
-    get:
-      tags: 
-        - Verificador
-      operationId: getPaginationOfVerificadorV1
-      summary: Paginación de verificadores
-      description:  > 
-        
-      parameters:
-        - $ref: "#/parameters/OrderByQueryParam"
-        - $ref: "#/parameters/SortOrderQueryParam"
-        - $ref: "#/parameters/PageNumberQueryParam"
-        - $ref: "#/parameters/PageSizeQueryParam"
-      responses:
-        "200":
-          $ref: "#/responses/GetPaginationOfVerifyResponseV1"
-        "400":
-          $ref: "#/responses/BadRequest"
-        "401":
-          $ref: "#/responses/Unauthorized"
-        "403":
-          $ref: "#/responses/Forbidden"
-        "404":
-          $ref: "#/responses/NotFound"
-        "500":
-          $ref: "#/responses/InternalServerError"
-    post:
-      tags: 
-        - Verificador
-      operationId: postCreatedVerifyV1
-      summary: Creación de verificador
-      description:  > 
-        El siguiente recurso `POST` permite crear un nuevo verificador. 
-      parameters:
-        - $ref: "#/parameters/CreatedVerifyBodyParam"
-      responses:
-        "201":
-          $ref: "#/responses/CreatedVerifyResponseV1"
-        "400":
-          $ref: "#/responses/BadRequest"
-        "401":
-          $ref: "#/responses/Unauthorized"
-        "403":
-          $ref: "#/responses/Forbidden"
-        "404":
-          $ref: "#/responses/NotFound"
-        "500":
-          $ref: "#/responses/InternalServerError"
-  
-  /verificadores/{verifyId}:
-    x-summary: /verificadores/{verifyId}
-    parameters:
-      - $ref: "#/parameters/UOHeader"
-      - $ref: "#/parameters/ChannelHeader"
-      - $ref: "#/parameters/ProductHeader"
-      - $ref: "#/parameters/DataOriginHeader"
-      - $ref: "#/parameters/VerifyIdPath"
-    get:
-      tags: 
-        - Verificador
-      operationId: getVerifyDetailByIdV1
-      summary: Detalle de Documento
-      description:  > 
-        El siguiente recurso `GET` permite obtener el detalle de un documento 
-        por su identificador único de documento. 
-      responses:
-        "200":
-          $ref: "#/responses/GetVerifyDetailByIdResponseV1"
-        "400":
-          $ref: "#/responses/BadRequest"
-        "401":
-          $ref: "#/responses/Unauthorized"
-        "403":
-          $ref: "#/responses/Forbidden"
-        "404":
-          $ref: "#/responses/NotFound"
-        "500":
-          $ref: "#/responses/InternalServerError"
-    put:
-      tags: 
-        - Verificador
-      operationId: PutVerificadorDetailByIdV1
-      summary: Actualización de Documento
-      description:  > 
-        El siguiente recurso `PUT` permite un documento 
-        por su identificador único de documento. 
-      parameters:
-        - $ref: "#/parameters/PutVerifyBodyParam"
-      responses:
-        "200":
-          $ref: "#/responses/PutVerifyDetailByIdResponseV1"
-        "400":
-          $ref: "#/responses/BadRequest"
-        "401":
-          $ref: "#/responses/Unauthorized"
-        "403":
-          $ref: "#/responses/Forbidden"
-        "404":
-          $ref: "#/responses/NotFound"
-        "500":
-          $ref: "#/responses/InternalServerError"
-    delete:
-      tags: 
-        - Verificador
-      operationId: DeleteVerificadorDetailByIdV1
-      summary: Eliminación de Documento
-      description:  > 
-        El siguiente recurso `DELETE` permite eliminar un documento existente 
-        en el gestor documental por su identificador único de documento. 
-      responses:
-        "201":
-          $ref: "#/responses/NoContent"
-        "400":
-          $ref: "#/responses/BadRequest"
-        "401":
-          $ref: "#/responses/Unauthorized"
-        "403":
-          $ref: "#/responses/Forbidden"
-        "404":
-          $ref: "#/responses/NotFound"
-        "500":
-          $ref: "#/responses/InternalServerError"
-          
-  /verificadores/desafio:
-    x-summary: /verificadores/desafio
-    parameters:
-      - $ref: '#/parameters/ChannelHeader'
-      - $ref: '#/parameters/UOHeader'
-      - $ref: '#/parameters/DataOriginHeader'
-      - $ref: '#/parameters/ProductHeader'
-    post:
-      tags:
-        - Verificador
-      operationId: postChallengeV1
-      summary: >-
-        Genera una verificación de segundo factor de atentificación por correo
-        electrónico o SMS.
-      description: >
-        Este recurso `POST` generar un desafío de segundo factor de
-        autentificación correo electrónico o SMS,  dependiendo de los siguientes
-        atributos:
-         - Unidad Organizacional
-         - Canal
-         - Producto
-         - Origen del Dato
-      parameters:
-        - $ref: '#/parameters/CreatedChallengeBody'
-      responses:
-        '204':
-          $ref: '#/responses/NoContent'
-        '400':
-          $ref: '#/responses/BadRequest'
-        '401':
-          $ref: '#/responses/Unauthorized'
-        '403':
-          $ref: '#/responses/Forbidden'
-        '404':
-          $ref: '#/responses/NotFound'
-        '500':
-          $ref: '#/responses/InternalServerError'
-  
-  /verificadores/reenvio:
-    x-summary: /verificadores/reenvio
-    parameters:
-      - $ref: '#/parameters/ChannelHeader'
-      - $ref: '#/parameters/UOHeader'
-      - $ref: '#/parameters/DataOriginHeader'
-      - $ref: '#/parameters/ProductHeader'
-    post:
-      tags:
-        - Verificador
-      operationId: postForwardingV1
-      summary: >-
-        Reenvía una verificación de segundo factor de atentificación por correo
-        electrónico o SMS existente.
-      description: >
-        Este recurso `POST` reenvía una verificación un desafio de segundo
-        factor de autentificación por correo electrónico o SMS,  dependiendo de
-        los siguientes atributos:
-         - Unidad Organizacional
-         - Canal
-         - Producto
-         - Origen del Dato
-      parameters:
-        - $ref: '#/parameters/CreatedChallengeBody'
-      responses:
-        '204':
-          $ref: '#/responses/NoContent'
-        '400':
-          $ref: '#/responses/BadRequest'
-        '401':
-          $ref: '#/responses/Unauthorized'
-        '403':
-          $ref: '#/responses/Forbidden'
-        '404':
-          $ref: '#/responses/NotFound'
-        '500':
-          $ref: '#/responses/InternalServerError'
-  
-  /verificadores/validar:
-    x-summary: /verificadores/validar
-    parameters:
-      - $ref: '#/parameters/ChannelHeader'
-      - $ref: '#/parameters/UOHeader'
-      - $ref: '#/parameters/DataOriginHeader'
-      - $ref: '#/parameters/ProductHeader'
-    post:
-      tags:
-        - Verificador
-      operationId: postValidateV1
-      summary: >-
-        Verifica una respuesta de segundo factor de atentificación por correo
-        electrónico o SMS.
-      description: >
-        Este recurso `POST` verifica una respuesta de segundo factor de
-        atentificación por correo electrónico o SMS
-      parameters:
-        - $ref: '#/parameters/ValidateChallengeBody'
-      responses:
-        '200':
-          $ref: '#/responses/ResponsePOSTValidateV1'
-        '400':
-          $ref: '#/responses/BadRequest'
-        '401':
-          $ref: '#/responses/Unauthorized'
-        '403':
-          $ref: '#/responses/Forbidden'
-        '404':
-          $ref: '#/responses/NotFound'
-        '500':
-          $ref: '#/responses/InternalServerError'
+## POST /clientes/{clientIdCRM}/nivelajustado
+  CrearMetalAjustadoBody:
+    in: body
+    name: Información de alta para el Metal Ajustado
+    schema:
+      $ref: "#/definitions/MetalAjustadoCommon"
