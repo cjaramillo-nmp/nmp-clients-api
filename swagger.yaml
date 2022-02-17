@@ -668,8 +668,6 @@ paths:
           $ref: '#/responses/Forbidden'
         '500':
           $ref: '#/responses/InternalServerError'
-  
-  
   /clientes/repep:
     x-summary: /clientes/repep
     parameters:
@@ -3992,31 +3990,37 @@ responses:
   ConsultarMetalAjustadoResponseBody:
     description: 200 - Ok
     schema:
-      type: array
-      items:
-        type: object
-        allOf:
-        - type: object
-          properties: 
-            idCliente:
-              description: Identificador único de Cliente asignado por CRM
-              type: number
-              format: int64
-              default: 10
-              example: "1435235234"
-            nombre: 
-              description: Nombre del cliente
-              type: string
-              example: "Pedro"
-            apellidoPaterno: 
-              description: Apellido paterno del cliente
-              type: string
-              example: "Perez"
-            apellidoMaterno: 
-              description: Apellido materno del cliente
-              type: string
-              example: "Prado"
-        - $ref: "#/definitions/MetalAjustadoBase"
+      type: object
+      properties: 
+        content:
+          type: array
+          items:
+            type: object
+            allOf:
+            - type: object
+              properties: 
+                idCliente:
+                  description: Identificador único de Cliente asignado por CRM
+                  type: number
+                  format: int64
+                  default: 10
+                  example: "1435235234"
+                nombre: 
+                  description: Nombre del cliente
+                  type: string
+                  example: "Pedro"
+                apellidoPaterno: 
+                  description: Apellido paterno del cliente
+                  type: string
+                  example: "Perez"
+                apellidoMaterno: 
+                  description: Apellido materno del cliente
+                  type: string
+                  example: "Prado"
+            - $ref: "#/definitions/MetalAjustadoBase"
+        page:
+          $ref: '#/definitions/Page'
+      
 parameters:
   
 ## Header Params
