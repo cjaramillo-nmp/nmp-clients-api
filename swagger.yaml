@@ -652,6 +652,8 @@ paths:
         - sortOrder
         
         *En caso de que no se porporcione al menos un parámetro, el servicio únicamente retornará 10 registros.*
+        
+        *En caso de que se porporcione el id de Cliente y no se proporcionen las fechas de inicio y fin, el servicio asignará la fecha de ejecución a la fecha de inicio y fin.*
       parameters:
         - name: idCliente
           in: query 
